@@ -175,6 +175,8 @@ function initChart() {
   // CRITICAL: Sort by yearDecimal to ensure chronological order
   uniqueHistorical.sort((a, b) => a.yearDecimal - b.yearDecimal);
   
+  console.log('After sort, last 3 historical:', uniqueHistorical.slice(-3).map(d => ({ year: d.yearDecimal, price: d.price })));
+  
   // Prediction data - force smooth transition by starting from actual latest price
   const latestYear = latestData.yearDecimal;
   const latestPrice = latestData.price;
@@ -242,6 +244,21 @@ function initChart() {
           pointRadius: 0,
           tension: 0.1,
           order: 1
+        },
+        // Target line
+        {
+          label: 'Target',
+          data: [
+            { x: 2000, y: targetPrice },
+            { x: 2035, y: targetPrice }
+          ],
+          borderColor: 'rgba(255, 100, 100, 0.6)',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          hoverBorderWidth: 2,
+          order: 2
         }
       ]
     },
@@ -310,7 +327,11 @@ function createReferenceLine(price) {
 function updateChart() {
   if (!chart) return;
   
-  // Chart only has 1 dataset now (main line), no target line to update
+  // Update target line (dataset 1)
+  chart.data.datasets[1].data = [
+    { x: 2000, y: targetPrice },
+    { x: 2035, y: targetPrice }
+  ];
   chart.update();
 }
 
