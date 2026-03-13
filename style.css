@@ -1,3 +1,19 @@
+:root {
+  --bg-0: #14111b;
+  --bg-1: #1a1621;
+  --bg-2: #231f32;
+  --bg-3: #2a2540;
+  --ink: #eee9fc;
+  --muted: #9a90b3;
+  --line: #3f3951;
+  --accent: #b3f4f3;
+  --accent-2: #e192ef;
+  --accent-3: #b1f2a7;
+  --warn: #f0c27b;
+  --danger: #e965a5;
+  --shadow: rgba(0, 0, 0, 0.35);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -5,56 +21,93 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: hsl(220, 20%, 4%);
-  color: hsl(45, 100%, 90%);
+  font-family: "JetBrains Mono", "SF Mono", Consolas, monospace;
+  background: radial-gradient(1000px 600px at 10% -20%, #2b2436, transparent),
+    radial-gradient(700px 500px at 90% -10%, #1c2a35, transparent),
+    linear-gradient(160deg, var(--bg-0), var(--bg-1) 40%, var(--bg-0));
+  color: var(--ink);
   min-height: 100vh;
-  padding: 20px;
+  padding: 24px;
 }
 
-.container {
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(transparent 95%, rgba(255, 255, 255, 0.03)),
+    linear-gradient(90deg, transparent 95%, rgba(255, 255, 255, 0.02));
+  background-size: 40px 40px;
+  pointer-events: none;
+  opacity: 0.4;
+  mix-blend-mode: screen;
+}
+
+.shell {
   max-width: 900px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
-header {
+.hero {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
 h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: hsl(38, 92%, 50%);
-  margin-bottom: 10px;
+  font-family: "Space Grotesk", "JetBrains Mono", sans-serif;
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: lowercase;
+  margin-bottom: 8px;
 }
 
 .subtitle {
-  font-size: 1.5rem;
-  color: hsl(45, 80%, 85%);
-  margin-bottom: 10px;
+  font-size: 16px;
+  color: var(--accent-2);
+  text-transform: lowercase;
+  margin-bottom: 8px;
 }
 
 .description {
-  font-size: 0.95rem;
-  color: hsl(220, 10%, 50%);
+  font-size: 12px;
+  color: var(--muted);
   max-width: 600px;
   margin: 0 auto;
-  line-height: 1.5;
+  line-height: 1.6;
+  text-transform: lowercase;
 }
 
 .status-badge {
-  display: inline-block;
-  background: hsl(220, 18%, 7%);
-  border: 2px solid hsl(38, 92%, 50%);
-  color: hsl(38, 92%, 50%);
-  padding: 8px 20px;
-  border-radius: 20px;
-  font-weight: 600;
-  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--accent-3);
+  font-size: 11px;
+  text-transform: lowercase;
+  background: rgba(34, 31, 50, 0.6);
   margin: 0 auto 30px;
-  display: block;
   width: fit-content;
+  display: flex;
+}
+
+.status-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 12px currentColor;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 .clock {
@@ -62,101 +115,111 @@ h1 {
   justify-content: center;
   align-items: center;
   gap: 10px;
-  margin-bottom: 40px;
-  background: linear-gradient(180deg, hsl(220, 25%, 3%), hsl(220, 25%, 5%));
+  margin-bottom: 32px;
+  background: var(--bg-2);
   padding: 30px;
-  border-radius: 15px;
-  border: 1px solid hsl(220, 15%, 15%);
-  box-shadow: inset 0 2px 8px hsl(220, 20%, 2%, 0.8);
-}
-
-.clock-value {
-  font-family: 'Courier New', monospace;
-  font-size: 3.5rem;
-  font-weight: 700;
-  color: hsl(38, 92%, 50%);
-  text-shadow: 
-    0 0 10px hsl(38, 92%, 50%, 0.6),
-    0 0 20px hsl(38, 92%, 50%, 0.3),
-    0 0 40px hsl(38, 92%, 50%, 0.15);
-  line-height: 1;
-  min-width: 100px;
-}
-
-.clock-label {
-  font-size: 0.75rem;
-  color: hsl(220, 10%, 50%);
-  margin-top: 5px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.clock-separator {
-  font-family: 'Courier New', monospace;
-  font-size: 3rem;
-  color: hsl(38, 92%, 50%);
-  opacity: 0.6;
-  margin: 0 5px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 30px var(--shadow);
 }
 
 .clock-segment {
   text-align: center;
 }
 
+.clock-value {
+  font-family: 'Courier New', monospace;
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-shadow: 
+    0 0 10px rgba(179, 244, 243, 0.6),
+    0 0 20px rgba(179, 244, 243, 0.3);
+  line-height: 1;
+  min-width: 100px;
+}
+
+.clock-label {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 5px;
+  text-transform: lowercase;
+  letter-spacing: 1px;
+}
+
+.clock-separator {
+  font-family: 'Courier New', monospace;
+  font-size: 3rem;
+  color: var(--accent);
+  opacity: 0.6;
+  margin: 0 5px;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 40px;
+  gap: 18px;
+  margin-bottom: 32px;
 }
 
 .stat {
-  background: linear-gradient(145deg, hsl(220, 18%, 10%), hsl(220, 18%, 5%));
-  padding: 20px;
-  border-radius: 10px;
-  border: 1px solid hsl(220, 15%, 15%);
+  background: var(--bg-2);
+  padding: 18px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
   text-align: center;
-  box-shadow: 0 8px 32px hsl(220, 20%, 2%, 0.8);
+  box-shadow: 0 10px 30px var(--shadow);
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.stat:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
 }
 
 .stat-label {
-  font-size: 0.85rem;
-  color: hsl(220, 10%, 50%);
+  font-size: 10px;
+  color: var(--muted);
   margin-bottom: 8px;
-  text-transform: uppercase;
+  text-transform: lowercase;
   letter-spacing: 0.5px;
 }
 
 .stat-value {
   font-size: 1.8rem;
-  font-weight: 700;
-  color: hsl(38, 92%, 50%);
+  font-weight: 600;
+  color: var(--accent);
   margin-bottom: 5px;
 }
 
 .stat-note {
-  font-size: 0.85rem;
-  color: hsl(45, 80%, 85%);
+  font-size: 11px;
+  color: var(--ink);
+  text-transform: lowercase;
 }
 
-.threshold-control {
-  background: linear-gradient(145deg, hsl(220, 18%, 10%), hsl(220, 18%, 5%));
-  padding: 25px;
-  border-radius: 10px;
-  border: 1px solid hsl(220, 15%, 15%);
-  margin-bottom: 40px;
-  box-shadow: 0 8px 32px hsl(220, 20%, 2%, 0.8);
+.panel {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 10px 30px var(--shadow);
+  transition: border-color 0.15s;
 }
 
-.threshold-control h3 {
-  font-size: 1.2rem;
-  color: hsl(38, 92%, 50%);
-  margin-bottom: 20px;
+.threshold-control h3,
+.chart-container h3 {
+  font-size: 13px;
+  color: var(--accent);
+  margin-bottom: 18px;
   text-align: center;
+  text-transform: lowercase;
+  font-weight: 400;
 }
 
 .slider-container {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .slider-labels {
@@ -164,21 +227,22 @@ h1 {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
-  font-size: 0.9rem;
-  color: hsl(220, 10%, 50%);
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: lowercase;
 }
 
 .slider-value {
   font-size: 1.5rem;
-  color: hsl(38, 92%, 50%);
-  font-weight: 700;
+  color: var(--accent);
+  font-weight: 600;
 }
 
 #threshold {
   width: 100%;
   height: 8px;
   border-radius: 5px;
-  background: linear-gradient(to right, hsl(38, 70%, 40%), hsl(38, 92%, 50%));
+  background: linear-gradient(to right, var(--bg-3), var(--accent));
   outline: none;
   -webkit-appearance: none;
 }
@@ -189,65 +253,51 @@ h1 {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: hsl(38, 92%, 50%);
+  background: var(--accent);
   cursor: pointer;
-  box-shadow: 0 0 10px hsl(38, 92%, 50%, 0.5);
+  box-shadow: 0 0 10px rgba(179, 244, 243, 0.5);
 }
 
 #threshold::-moz-range-thumb {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: hsl(38, 92%, 50%);
+  background: var(--accent);
   cursor: pointer;
   border: none;
-  box-shadow: 0 0 10px hsl(38, 92%, 50%, 0.5);
+  box-shadow: 0 0 10px rgba(179, 244, 243, 0.5);
 }
 
 .presets {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .preset-btn {
-  background: hsl(220, 15%, 12%);
-  border: 2px solid hsl(220, 15%, 15%);
-  color: hsl(45, 80%, 85%);
-  padding: 8px 20px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  padding: 8px 14px;
   border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 12px;
+  font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s;
+  text-transform: lowercase;
+  transition: all 0.15s;
 }
 
 .preset-btn:hover {
-  background: hsl(220, 15%, 15%);
-  border-color: hsl(38, 92%, 50%);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .preset-btn.active {
-  background: hsl(38, 92%, 50%);
-  color: hsl(220, 20%, 4%);
-  border-color: hsl(38, 92%, 50%);
-}
-
-.chart-container {
-  background: linear-gradient(145deg, hsl(220, 18%, 10%), hsl(220, 18%, 5%));
-  padding: 25px;
-  border-radius: 10px;
-  border: 1px solid hsl(220, 15%, 15%);
-  margin-bottom: 40px;
-  box-shadow: 0 8px 32px hsl(220, 20%, 2%, 0.8);
-}
-
-.chart-container h3 {
-  font-size: 1.2rem;
-  color: hsl(38, 92%, 50%);
-  margin-bottom: 20px;
-  text-align: center;
+  background: var(--accent);
+  color: var(--bg-1);
+  border-color: transparent;
+  box-shadow: 0 10px 20px rgba(179, 244, 243, 0.2);
 }
 
 #price-chart {
@@ -265,8 +315,9 @@ h1 {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.9rem;
-  color: hsl(220, 10%, 50%);
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: lowercase;
 }
 
 .legend-line {
@@ -276,31 +327,36 @@ h1 {
 }
 
 .legend-line.historical {
-  background: hsl(38, 92%, 50%);
+  background: var(--accent);
 }
 
 .legend-line.predicted {
-  background: hsl(38, 92%, 50%);
+  background: var(--accent);
   opacity: 0.5;
-  border-top: 2px dashed hsl(38, 92%, 50%);
+  border-top: 2px dashed var(--accent);
   height: 0;
 }
 
-footer {
+.footer {
+  margin-top: 24px;
   text-align: center;
-  color: hsl(220, 10%, 50%);
-  font-size: 0.85rem;
+  font-size: 11px;
+  color: var(--muted);
   line-height: 1.6;
-  padding: 20px 0;
+  text-transform: lowercase;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
+  body {
+    padding: 16px;
+  }
+  
   h1 {
-    font-size: 2rem;
+    font-size: 28px;
   }
   
   .subtitle {
-    font-size: 1.2rem;
+    font-size: 14px;
   }
   
   .clock-value {

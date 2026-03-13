@@ -119,7 +119,7 @@ function startCountdown() {
     const diff = targetDate - now;
     
     if (diff <= 0) {
-      document.getElementById('status-badge').textContent = 'Target Reached!';
+      document.getElementById('status-text').textContent = 'target reached!';
       document.getElementById('days').textContent = '000';
       document.getElementById('hours').textContent = '00';
       document.getElementById('minutes').textContent = '00';
@@ -178,7 +178,7 @@ function initChart() {
           segment: {
             borderColor: (ctx) => {
               const point = combinedData[ctx.p0DataIndex];
-              return point?.predicted ? 'hsl(38, 92%, 50%, 0.5)' : 'hsl(38, 92%, 50%)';
+              return point?.predicted ? 'rgba(179, 244, 243, 0.5)' : '#b3f4f3';
             },
             borderDash: (ctx) => {
               const point = combinedData[ctx.p0DataIndex];
@@ -238,14 +238,14 @@ function initChart() {
         x: {
           type: 'linear',
           title: { display: false },
-          grid: { color: 'hsl(220, 15%, 15%)' },
-          ticks: { color: 'hsl(220, 10%, 50%)' }
+          grid: { color: '#3f3951' },
+          ticks: { color: '#9a90b3' }
         },
         y: {
           title: { display: false },
-          grid: { color: 'hsl(220, 15%, 15%)' },
+          grid: { color: '#3f3951' },
           ticks: {
-            color: 'hsl(220, 10%, 50%)',
+            color: '#9a90b3',
             callback: (value) => `£${value.toFixed(2)}`
           }
         }
