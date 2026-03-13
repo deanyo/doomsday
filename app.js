@@ -178,7 +178,7 @@ function initChart() {
           segment: {
             borderColor: (ctx) => {
               const point = combinedData[ctx.p0DataIndex];
-              return point?.predicted ? 'rgba(255, 179, 71, 0.5)' : '#ffb347';
+              return point?.predicted ? 'hsl(38, 92%, 50%, 0.5)' : 'hsl(38, 92%, 50%)';
             },
             borderDash: (ctx) => {
               const point = combinedData[ctx.p0DataIndex];
@@ -190,10 +190,10 @@ function initChart() {
           tension: 0.1
         },
         // Reference lines at £4, £6, £8, £10
-        ...createReferenceLine(4, combinedData),
-        ...createReferenceLine(6, combinedData),
-        ...createReferenceLine(8, combinedData),
-        ...createReferenceLine(10, combinedData),
+        createReferenceLine(4),
+        createReferenceLine(6),
+        createReferenceLine(8),
+        createReferenceLine(10),
         // Target line
         {
           label: 'Target',
@@ -254,8 +254,8 @@ function initChart() {
   });
 }
 
-function createReferenceLine(price, combinedData) {
-  return [{
+function createReferenceLine(price) {
+  return {
     label: `£${price}`,
     data: [
       { x: 2000, y: price },
@@ -265,7 +265,7 @@ function createReferenceLine(price, combinedData) {
     borderDash: [3, 3],
     borderWidth: 1,
     pointRadius: 0
-  }];
+  };
 }
 
 function updateChart() {
