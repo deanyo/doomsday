@@ -203,13 +203,26 @@ function initChart() {
           },
           borderWidth: 3,
           pointRadius: 0,
-          tension: 0.1
+          tension: 0.1,
+          order: 1
         },
-        // Reference lines
-        createReferenceLine(4),
-        createReferenceLine(6),
-        createReferenceLine(8),
-        createReferenceLine(10),
+        // Reference lines - render behind main line
+        {
+          ...createReferenceLine(4),
+          order: 2
+        },
+        {
+          ...createReferenceLine(6),
+          order: 2
+        },
+        {
+          ...createReferenceLine(8),
+          order: 2
+        },
+        {
+          ...createReferenceLine(10),
+          order: 2
+        },
         // Target line
         {
           label: 'Target',
@@ -222,7 +235,8 @@ function initChart() {
           borderWidth: 2,
           pointRadius: 0,
           pointHoverRadius: 0,
-          hoverBorderWidth: 2
+          hoverBorderWidth: 2,
+          order: 2
         }
       ]
     },
@@ -237,18 +251,18 @@ function initChart() {
       plugins: {
         legend: { display: false },
         tooltip: {
+          filter: (tooltipItem) => {
+            // Only show tooltip for the main line (dataset 0)
+            return tooltipItem.datasetIndex === 0;
+          },
           callbacks: {
             title: (items) => {
               const year = Math.floor(items[0].parsed.x);
               return `Year ${year}`;
             },
             label: (context) => {
-              if (context.datasetIndex === 0) {
-                return `£${context.parsed.y.toFixed(2)}`;
-              }
-              return null;
-            },
-            filter: (item) => item.datasetIndex === 0
+              return `£${context.parsed.y.toFixed(2)}`;
+            }
           }
         }
       },
