@@ -1,5 +1,12 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+@font-face {
+  font-family: 'DSEG7';
+  src: url('https://cdn.jsdelivr.net/npm/dseg@0.46.0/fonts/DSEG7-Classic/DSEG7Classic-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+}
+
 body {
   font-family: "Courier New", monospace;
   background: #000;
@@ -41,10 +48,10 @@ h1 {
 }
 
 .value {
-  font-family: "Audiowide", monospace;
+  font-family: "DSEG7", monospace;
   font-size: 96px;
-  font-weight: 400;
-  letter-spacing: 8px;
+  font-weight: bold;
+  letter-spacing: 12px;
   text-shadow: 0 0 30px rgba(255, 0, 0, 0.9), 0 0 60px rgba(255, 0, 0, 0.5);
   line-height: 1;
 }
@@ -85,10 +92,10 @@ h1 {
 }
 
 .metric-value {
-  font-family: "Audiowide", monospace;
+  font-family: "DSEG7", monospace;
   font-size: 32px;
-  font-weight: 400;
-  letter-spacing: 4px;
+  font-weight: bold;
+  letter-spacing: 6px;
   text-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
 }
 
