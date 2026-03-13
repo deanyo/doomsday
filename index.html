@@ -15,14 +15,9 @@
   <div class="shell">
     <header class="hero">
       <h1>the uk pint price clock</h1>
-      <p class="subtitle">countdown to the £<span id="target-display">5.00</span> pint</p>
-      <p class="description">based on ons average uk draught lager prices and linear trend projection. how long until your pint hits the next painful milestone?</p>
+      <p class="subtitle">countdown to the £<span id="target-display">5.00</span> average pint</p>
+      <p class="description">tracking ons average uk draught lager prices. how long until the average pint hits the next painful milestone?</p>
     </header>
-
-    <div class="status-badge">
-      <span class="dot"></span>
-      <span id="status-text">counting down</span>
-    </div>
 
     <div class="clock">
       <div class="clock-segment">
@@ -53,7 +48,7 @@
         <div class="stat-note" id="current-date">Jan 2025 (latest ONS)</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Target Price</div>
+        <div class="stat-label">Target Avg. Price</div>
         <div class="stat-value" id="target-price">£5.00</div>
         <div class="stat-note" id="remaining">£0.17 to go</div>
       </div>
@@ -97,7 +92,7 @@
     </div>
 
     <footer class="footer">
-      <p>data: ons average price of a pint of draught lager in the uk. prediction uses linear regression on 2015–2025 trend data. actual prices may vary by region and establishment.</p>
+      <p>data: ons average price of a pint of draught lager in the uk. prediction uses linear regression on 2015–2025 trend data. prices shown are uk-wide averages and will vary significantly by region and establishment.</p>
     </footer>
   </div>
 
