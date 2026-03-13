@@ -40,9 +40,28 @@ async function loadData() {
   regression.slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
   regression.intercept = (sumY - regression.slope * sumX) / n;
   
+  // Log regression stats for verification
+  console.log('Regression (2015-2025):', {
+    slope: regression.slope.toFixed(4),
+    slopePerYear: `£${regression.slope.toFixed(2)}/year`,
+    intercept: regression.intercept.toFixed(2),
+    dataPoints: n,
+    r2: calculateR2(recentData)
+  });
+  
   updateUI();
   initChart();
   startCountdown();
+}
+
+function calculateR2(data) {
+  const yMean = data.reduce((sum, d) => sum + d.price, 0) / data.length;
+  const ssTotal = data.reduce((sum, d) => sum + Math.pow(d.price - yMean, 2), 0);
+  const ssResidual = data.reduce((sum, d) => {
+    const predicted = regression.slope * d.yearDecimal + regression.intercept;
+    return sum + Math.pow(d.price - predicted, 2);
+  }, 0);
+  return (1 - ssResidual / ssTotal).toFixed(4);
 }
 
 function getTargetDate(target) {
@@ -165,7 +184,7 @@ function initChart() {
         {
           label: 'Target',
           data: [
-            { x: 2010, y: targetPrice },
+            { x: Math.min(...historicalData.map(d => d.yearDecimal)), y: targetPrice },
             { x: 2035, y: targetPrice }
           ],
           borderColor: 'rgba(255, 100, 100, 0.6)',
@@ -209,8 +228,10 @@ function initChart() {
 function updateChart() {
   if (!chart) return;
   
+  const historicalData = onsData.filter((d, i) => i % 24 === 0 || i === onsData.length - 1);
+  
   chart.data.datasets[2].data = [
-    { x: 2010, y: targetPrice },
+    { x: Math.min(...historicalData.map(d => d.yearDecimal)), y: targetPrice },
     { x: 2035, y: targetPrice }
   ];
   chart.update();
@@ -219,6 +240,7 @@ function updateChart() {
 // Threshold controls
 document.getElementById('threshold').addEventListener('input', (e) => {
   targetPrice = parseFloat(e.target.value);
+  document.getElementById('slider-value').textContent = targetPrice.toFixed(2);
   updateUI();
   updatePresetButtons();
 });

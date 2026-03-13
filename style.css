@@ -145,39 +145,57 @@ h1 {
 .threshold-control h3 {
   font-size: 1.2rem;
   color: #ffb347;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   text-align: center;
 }
 
-.threshold-input {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  margin-bottom: 15px;
+.slider-container {
+  margin-bottom: 20px;
 }
 
-.currency {
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  color: #999;
+}
+
+.slider-value {
   font-size: 1.5rem;
   color: #ffb347;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 #threshold {
-  background: rgba(0, 0, 0, 0.5);
-  border: 2px solid rgba(255, 179, 71, 0.3);
-  color: #ffb347;
-  font-size: 1.5rem;
-  font-weight: 600;
-  padding: 10px 15px;
-  border-radius: 8px;
-  width: 120px;
-  text-align: center;
+  width: 100%;
+  height: 8px;
+  border-radius: 5px;
+  background: linear-gradient(to right, rgba(255, 179, 71, 0.2), rgba(255, 179, 71, 0.5));
+  outline: none;
+  -webkit-appearance: none;
 }
 
-#threshold:focus {
-  outline: none;
-  border-color: #ffb347;
+#threshold::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffb347;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(255, 179, 71, 0.5);
+}
+
+#threshold::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffb347;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 10px rgba(255, 179, 71, 0.5);
 }
 
 .presets {
