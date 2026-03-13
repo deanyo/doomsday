@@ -186,6 +186,14 @@ function initChart() {
     lastPrediction: lineData[lineData.length - 1]
   });
   
+  // Check for duplicate X values
+  const xValues = lineData.map(d => d.x);
+  const duplicates = xValues.filter((x, i) => xValues.indexOf(x) !== i);
+  if (duplicates.length > 0) {
+    console.error('DUPLICATE X VALUES FOUND:', duplicates);
+    console.log('Full data with duplicates:', lineData.filter(d => duplicates.includes(d.x)));
+  }
+  
   chart = new Chart(ctx, {
     type: 'line',
     data: {
