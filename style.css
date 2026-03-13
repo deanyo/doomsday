@@ -183,39 +183,60 @@ section:hover {
 .timeline {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-}
-
-.milestone {
-  display: grid;
-  grid-template-columns: 80px 120px 1fr;
   gap: 12px;
-  padding: 12px;
-  background: var(--bg-3);
-  border-radius: 8px;
-  align-items: center;
 }
 
-.milestone.next {
-  border: 2px solid var(--danger);
-  background: var(--bg-1);
+#priceChart {
+  width: 100%;
+  height: auto;
+  cursor: crosshair;
 }
 
-.year {
+.salary-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.salary-input label {
   color: var(--muted);
-  font-weight: bold;
   font-size: 12px;
 }
 
-.price {
+#salaryDisplay {
   color: var(--accent);
   font-weight: bold;
-  font-size: 14px;
 }
 
-.note {
-  color: var(--muted);
-  font-size: 12px;
+input[type="range"] {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-3);
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(179, 244, 243, 0.5);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 8px rgba(179, 244, 243, 0.5);
 }
 
 .context p {
@@ -277,12 +298,11 @@ footer p {
     min-width: 80px;
   }
   
-  .milestone {
-    grid-template-columns: 1fr;
-    gap: 4px;
-  }
-  
   .value {
     font-size: 24px;
+  }
+  
+  #priceChart {
+    height: 200px;
   }
 }
