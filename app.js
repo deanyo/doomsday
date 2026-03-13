@@ -238,14 +238,14 @@ function initChart() {
         x: {
           type: 'linear',
           title: { display: false },
-          grid: { color: 'rgba(255, 179, 71, 0.1)' },
-          ticks: { color: '#999' }
+          grid: { color: 'hsl(220, 15%, 15%)' },
+          ticks: { color: 'hsl(220, 10%, 50%)' }
         },
         y: {
           title: { display: false },
-          grid: { color: 'rgba(255, 179, 71, 0.1)' },
+          grid: { color: 'hsl(220, 15%, 15%)' },
           ticks: {
-            color: '#999',
+            color: 'hsl(220, 10%, 50%)',
             callback: (value) => `£${value.toFixed(2)}`
           }
         }

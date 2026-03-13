@@ -6,8 +6,8 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d1810 100%);
-  color: #f5f5f5;
+  background: hsl(220, 20%, 4%);
+  color: hsl(45, 100%, 90%);
   min-height: 100vh;
   padding: 20px;
 }
@@ -25,19 +25,19 @@ header {
 h1 {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #ffb347;
+  color: hsl(38, 92%, 50%);
   margin-bottom: 10px;
 }
 
 .subtitle {
   font-size: 1.5rem;
-  color: #ffd699;
+  color: hsl(45, 80%, 85%);
   margin-bottom: 10px;
 }
 
 .description {
   font-size: 0.95rem;
-  color: #aaa;
+  color: hsl(220, 10%, 50%);
   max-width: 600px;
   margin: 0 auto;
   line-height: 1.5;
@@ -45,9 +45,9 @@ h1 {
 
 .status-badge {
   display: inline-block;
-  background: rgba(255, 179, 71, 0.2);
-  border: 2px solid #ffb347;
-  color: #ffb347;
+  background: hsl(220, 18%, 7%);
+  border: 2px solid hsl(38, 92%, 50%);
+  color: hsl(38, 92%, 50%);
   padding: 8px 20px;
   border-radius: 20px;
   font-weight: 600;
@@ -63,29 +63,29 @@ h1 {
   align-items: center;
   gap: 10px;
   margin-bottom: 40px;
-  background: rgba(0, 0, 0, 0.4);
+  background: linear-gradient(180deg, hsl(220, 25%, 3%), hsl(220, 25%, 5%));
   padding: 30px;
   border-radius: 15px;
-  border: 2px solid rgba(255, 179, 71, 0.3);
-}
-
-.clock-segment {
-  text-align: center;
+  border: 1px solid hsl(220, 15%, 15%);
+  box-shadow: inset 0 2px 8px hsl(220, 20%, 2%, 0.8);
 }
 
 .clock-value {
   font-family: 'Courier New', monospace;
   font-size: 3.5rem;
   font-weight: 700;
-  color: #ffb347;
-  text-shadow: 0 0 20px rgba(255, 179, 71, 0.6);
+  color: hsl(38, 92%, 50%);
+  text-shadow: 
+    0 0 10px hsl(38, 92%, 50%, 0.6),
+    0 0 20px hsl(38, 92%, 50%, 0.3),
+    0 0 40px hsl(38, 92%, 50%, 0.15);
   line-height: 1;
   min-width: 100px;
 }
 
 .clock-label {
   font-size: 0.75rem;
-  color: #999;
+  color: hsl(220, 10%, 50%);
   margin-top: 5px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -94,9 +94,13 @@ h1 {
 .clock-separator {
   font-family: 'Courier New', monospace;
   font-size: 3rem;
-  color: #ffb347;
+  color: hsl(38, 92%, 50%);
   opacity: 0.6;
   margin: 0 5px;
+}
+
+.clock-segment {
+  text-align: center;
 }
 
 .stats {
@@ -107,16 +111,17 @@ h1 {
 }
 
 .stat {
-  background: rgba(0, 0, 0, 0.3);
+  background: linear-gradient(145deg, hsl(220, 18%, 10%), hsl(220, 18%, 5%));
   padding: 20px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 179, 71, 0.2);
+  border: 1px solid hsl(220, 15%, 15%);
   text-align: center;
+  box-shadow: 0 8px 32px hsl(220, 20%, 2%, 0.8);
 }
 
 .stat-label {
   font-size: 0.85rem;
-  color: #999;
+  color: hsl(220, 10%, 50%);
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -125,26 +130,27 @@ h1 {
 .stat-value {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #ffb347;
+  color: hsl(38, 92%, 50%);
   margin-bottom: 5px;
 }
 
 .stat-note {
   font-size: 0.85rem;
-  color: #aaa;
+  color: hsl(45, 80%, 85%);
 }
 
 .threshold-control {
-  background: rgba(0, 0, 0, 0.3);
+  background: linear-gradient(145deg, hsl(220, 18%, 10%), hsl(220, 18%, 5%));
   padding: 25px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 179, 71, 0.2);
+  border: 1px solid hsl(220, 15%, 15%);
   margin-bottom: 40px;
+  box-shadow: 0 8px 32px hsl(220, 20%, 2%, 0.8);
 }
 
 .threshold-control h3 {
   font-size: 1.2rem;
-  color: #ffb347;
+  color: hsl(38, 92%, 50%);
   margin-bottom: 20px;
   text-align: center;
 }
@@ -159,12 +165,12 @@ h1 {
   align-items: center;
   margin-bottom: 10px;
   font-size: 0.9rem;
-  color: #999;
+  color: hsl(220, 10%, 50%);
 }
 
 .slider-value {
   font-size: 1.5rem;
-  color: #ffb347;
+  color: hsl(38, 92%, 50%);
   font-weight: 700;
 }
 
@@ -172,7 +178,7 @@ h1 {
   width: 100%;
   height: 8px;
   border-radius: 5px;
-  background: linear-gradient(to right, rgba(255, 179, 71, 0.2), rgba(255, 179, 71, 0.5));
+  background: linear-gradient(to right, hsl(38, 70%, 40%), hsl(38, 92%, 50%));
   outline: none;
   -webkit-appearance: none;
 }
@@ -183,19 +189,19 @@ h1 {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #ffb347;
+  background: hsl(38, 92%, 50%);
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(255, 179, 71, 0.5);
+  box-shadow: 0 0 10px hsl(38, 92%, 50%, 0.5);
 }
 
 #threshold::-moz-range-thumb {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #ffb347;
+  background: hsl(38, 92%, 50%);
   cursor: pointer;
   border: none;
-  box-shadow: 0 0 10px rgba(255, 179, 71, 0.5);
+  box-shadow: 0 0 10px hsl(38, 92%, 50%, 0.5);
 }
 
 .presets {
@@ -206,9 +212,9 @@ h1 {
 }
 
 .preset-btn {
-  background: rgba(255, 179, 71, 0.1);
-  border: 2px solid rgba(255, 179, 71, 0.3);
-  color: #ffb347;
+  background: hsl(220, 15%, 12%);
+  border: 2px solid hsl(220, 15%, 15%);
+  color: hsl(45, 80%, 85%);
   padding: 8px 20px;
   border-radius: 8px;
   font-size: 0.95rem;
@@ -218,26 +224,28 @@ h1 {
 }
 
 .preset-btn:hover {
-  background: rgba(255, 179, 71, 0.2);
-  border-color: #ffb347;
+  background: hsl(220, 15%, 15%);
+  border-color: hsl(38, 92%, 50%);
 }
 
 .preset-btn.active {
-  background: #ffb347;
-  color: #1a1a1a;
+  background: hsl(38, 92%, 50%);
+  color: hsl(220, 20%, 4%);
+  border-color: hsl(38, 92%, 50%);
 }
 
 .chart-container {
-  background: rgba(0, 0, 0, 0.3);
+  background: linear-gradient(145deg, hsl(220, 18%, 10%), hsl(220, 18%, 5%));
   padding: 25px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 179, 71, 0.2);
+  border: 1px solid hsl(220, 15%, 15%);
   margin-bottom: 40px;
+  box-shadow: 0 8px 32px hsl(220, 20%, 2%, 0.8);
 }
 
 .chart-container h3 {
   font-size: 1.2rem;
-  color: #ffb347;
+  color: hsl(38, 92%, 50%);
   margin-bottom: 20px;
   text-align: center;
 }
@@ -258,7 +266,7 @@ h1 {
   align-items: center;
   gap: 8px;
   font-size: 0.9rem;
-  color: #aaa;
+  color: hsl(220, 10%, 50%);
 }
 
 .legend-line {
@@ -268,19 +276,19 @@ h1 {
 }
 
 .legend-line.historical {
-  background: #ffb347;
+  background: hsl(38, 92%, 50%);
 }
 
 .legend-line.predicted {
-  background: #ffb347;
+  background: hsl(38, 92%, 50%);
   opacity: 0.5;
-  border-top: 2px dashed #ffb347;
+  border-top: 2px dashed hsl(38, 92%, 50%);
   height: 0;
 }
 
 footer {
   text-align: center;
-  color: #777;
+  color: hsl(220, 10%, 50%);
   font-size: 0.85rem;
   line-height: 1.6;
   padding: 20px 0;
