@@ -205,38 +205,6 @@ function initChart() {
           pointRadius: 0,
           tension: 0.1,
           order: 1
-        },
-        // Reference lines - render behind main line
-        {
-          ...createReferenceLine(4),
-          order: 2
-        },
-        {
-          ...createReferenceLine(6),
-          order: 2
-        },
-        {
-          ...createReferenceLine(8),
-          order: 2
-        },
-        {
-          ...createReferenceLine(10),
-          order: 2
-        },
-        // Target line
-        {
-          label: 'Target',
-          data: [
-            { x: 2000, y: targetPrice },
-            { x: 2035, y: targetPrice }
-          ],
-          borderColor: 'rgba(255, 100, 100, 0.6)',
-          borderDash: [5, 5],
-          borderWidth: 2,
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          hoverBorderWidth: 2,
-          order: 2
         }
       ]
     },
