@@ -145,13 +145,16 @@ function startCountdown() {
 function initChart() {
   const ctx = document.getElementById('price-chart').getContext('2d');
   
-  // Historical data (every 2 years for cleaner chart)
-  const historicalData = onsData.filter((d, i) => i % 24 === 0 || i === onsData.length - 1);
+  // Historical data from 2000 onwards (annual for cleaner chart)
+  const historicalData = onsData.filter(d => d.year >= 2000 && d.month === 0);
+  const latestData = onsData[onsData.length - 1];
+  if (historicalData[historicalData.length - 1].yearDecimal !== latestData.yearDecimal) {
+    historicalData.push(latestData);
+  }
   
-  // Prediction data
-  const latestYear = onsData[onsData.length - 1].yearDecimal;
+  // Prediction data - start from latest point
   const predictionYears = [];
-  for (let y = Math.floor(latestYear); y <= 2035; y++) {
+  for (let y = Math.ceil(latestData.yearDecimal); y <= 2035; y++) {
     predictionYears.push(y);
   }
   const predictionData = predictionYears.map(y => ({
@@ -159,32 +162,43 @@ function initChart() {
     price: regression.slope * y + regression.intercept
   }));
   
+  // Combine historical + predicted into single line
+  const combinedData = [
+    ...historicalData.map(d => ({ x: d.yearDecimal, y: d.price, predicted: false })),
+    ...predictionData.map(d => ({ x: d.yearDecimal, y: d.price, predicted: true }))
+  ];
+  
   chart = new Chart(ctx, {
     type: 'line',
     data: {
       datasets: [
         {
-          label: 'Historical',
-          data: historicalData.map(d => ({ x: d.yearDecimal, y: d.price })),
-          borderColor: '#ffb347',
-          backgroundColor: 'rgba(255, 179, 71, 0.1)',
+          label: 'Pint Price',
+          data: combinedData,
+          segment: {
+            borderColor: (ctx) => {
+              const point = combinedData[ctx.p0DataIndex];
+              return point?.predicted ? 'rgba(255, 179, 71, 0.5)' : '#ffb347';
+            },
+            borderDash: (ctx) => {
+              const point = combinedData[ctx.p0DataIndex];
+              return point?.predicted ? [10, 5] : [];
+            }
+          },
           borderWidth: 3,
           pointRadius: 0,
           tension: 0.1
         },
-        {
-          label: 'Predicted',
-          data: predictionData.map(d => ({ x: d.yearDecimal, y: d.price })),
-          borderColor: 'rgba(255, 179, 71, 0.5)',
-          borderDash: [10, 5],
-          borderWidth: 3,
-          pointRadius: 0,
-          tension: 0
-        },
+        // Reference lines at £4, £6, £8, £10
+        ...createReferenceLine(4, combinedData),
+        ...createReferenceLine(6, combinedData),
+        ...createReferenceLine(8, combinedData),
+        ...createReferenceLine(10, combinedData),
+        // Target line
         {
           label: 'Target',
           data: [
-            { x: Math.min(...historicalData.map(d => d.yearDecimal)), y: targetPrice },
+            { x: 2000, y: targetPrice },
             { x: 2035, y: targetPrice }
           ],
           borderColor: 'rgba(255, 100, 100, 0.6)',
@@ -197,11 +211,26 @@ function initChart() {
     options: {
       responsive: true,
       maintainAspectRatio: true,
+      interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false
+      },
       plugins: {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: (context) => `£${context.parsed.y.toFixed(2)}`
+            title: (items) => {
+              const year = Math.floor(items[0].parsed.x);
+              return `Year ${year}`;
+            },
+            label: (context) => {
+              if (context.datasetIndex === 0) {
+                return `£${context.parsed.y.toFixed(2)}`;
+              }
+              return null;
+            },
+            filter: (item) => item.datasetIndex === 0
           }
         }
       },
@@ -225,13 +254,26 @@ function initChart() {
   });
 }
 
+function createReferenceLine(price, combinedData) {
+  return [{
+    label: `£${price}`,
+    data: [
+      { x: 2000, y: price },
+      { x: 2035, y: price }
+    ],
+    borderColor: 'rgba(150, 150, 150, 0.3)',
+    borderDash: [3, 3],
+    borderWidth: 1,
+    pointRadius: 0
+  }];
+}
+
 function updateChart() {
   if (!chart) return;
   
-  const historicalData = onsData.filter((d, i) => i % 24 === 0 || i === onsData.length - 1);
-  
-  chart.data.datasets[2].data = [
-    { x: Math.min(...historicalData.map(d => d.yearDecimal)), y: targetPrice },
+  // Update target line
+  chart.data.datasets[5].data = [
+    { x: 2000, y: targetPrice },
     { x: 2035, y: targetPrice }
   ];
   chart.update();
