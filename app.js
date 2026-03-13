@@ -165,14 +165,26 @@ function initChart() {
     });
   }
   
+  // Find transition point for styling
+  const transitionIndex = historicalData.length - 1;
+  
   // Single continuous line
   const lineData = [
     ...historicalData.map(d => ({ x: d.yearDecimal, y: d.price })),
     ...predictionData.map(d => ({ x: d.yearDecimal, y: d.price }))
   ];
   
-  // Find transition point for styling
-  const transitionIndex = historicalData.length - 1;
+  // Debug: log the data
+  console.log('Historical points:', historicalData.length);
+  console.log('Prediction points:', predictionData.length);
+  console.log('Total chart points:', lineData.length);
+  console.log('Transition at index:', transitionIndex);
+  console.log('Sample data:', {
+    firstHistorical: lineData[0],
+    lastHistorical: lineData[transitionIndex],
+    firstPrediction: lineData[transitionIndex + 1],
+    lastPrediction: lineData[lineData.length - 1]
+  });
   
   chart = new Chart(ctx, {
     type: 'line',
