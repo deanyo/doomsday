@@ -145,28 +145,34 @@ function startCountdown() {
 function initChart() {
   const ctx = document.getElementById('price-chart').getContext('2d');
   
-  // Historical data from 2000 onwards (annual for cleaner chart)
+  // Historical data from 2000 onwards (annual only, no duplicates)
   const historicalData = onsData.filter(d => d.year >= 2000 && d.month === 0);
   const latestData = onsData[onsData.length - 1];
-  if (historicalData[historicalData.length - 1].yearDecimal !== latestData.yearDecimal) {
+  
+  // Only add latest if it's not already in the annual data
+  const lastHistorical = historicalData[historicalData.length - 1];
+  if (lastHistorical.yearDecimal !== latestData.yearDecimal) {
     historicalData.push(latestData);
   }
   
   // Prediction data - start from latest point
-  const predictionYears = [];
-  for (let y = Math.ceil(latestData.yearDecimal); y <= 2035; y++) {
-    predictionYears.push(y);
+  const latestYear = latestData.yearDecimal;
+  const predictionData = [];
+  for (let y = Math.ceil(latestYear); y <= 2035; y++) {
+    predictionData.push({
+      yearDecimal: y,
+      price: regression.slope * y + regression.intercept
+    });
   }
-  const predictionData = predictionYears.map(y => ({
-    yearDecimal: y,
-    price: regression.slope * y + regression.intercept
-  }));
   
-  // Combine historical + predicted into single line
-  const combinedData = [
-    ...historicalData.map(d => ({ x: d.yearDecimal, y: d.price, predicted: false })),
-    ...predictionData.map(d => ({ x: d.yearDecimal, y: d.price, predicted: true }))
+  // Single continuous line
+  const lineData = [
+    ...historicalData.map(d => ({ x: d.yearDecimal, y: d.price })),
+    ...predictionData.map(d => ({ x: d.yearDecimal, y: d.price }))
   ];
+  
+  // Find transition point for styling
+  const transitionIndex = historicalData.length - 1;
   
   chart = new Chart(ctx, {
     type: 'line',
@@ -174,22 +180,20 @@ function initChart() {
       datasets: [
         {
           label: 'Pint Price',
-          data: combinedData,
+          data: lineData,
           segment: {
             borderColor: (ctx) => {
-              const point = combinedData[ctx.p0DataIndex];
-              return point?.predicted ? 'rgba(179, 244, 243, 0.5)' : '#b3f4f3';
+              return ctx.p0DataIndex >= transitionIndex ? 'rgba(179, 244, 243, 0.5)' : '#b3f4f3';
             },
             borderDash: (ctx) => {
-              const point = combinedData[ctx.p0DataIndex];
-              return point?.predicted ? [10, 5] : [];
+              return ctx.p0DataIndex >= transitionIndex ? [10, 5] : [];
             }
           },
           borderWidth: 3,
           pointRadius: 0,
           tension: 0.1
         },
-        // Reference lines at £4, £6, £8, £10
+        // Reference lines
         createReferenceLine(4),
         createReferenceLine(6),
         createReferenceLine(8),
@@ -204,7 +208,9 @@ function initChart() {
           borderColor: 'rgba(255, 100, 100, 0.6)',
           borderDash: [5, 5],
           borderWidth: 2,
-          pointRadius: 0
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          hoverBorderWidth: 2
         }
       ]
     },
@@ -264,7 +270,9 @@ function createReferenceLine(price) {
     borderColor: 'rgba(150, 150, 150, 0.3)',
     borderDash: [3, 3],
     borderWidth: 1,
-    pointRadius: 0
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    hoverBorderWidth: 1
   };
 }
 
