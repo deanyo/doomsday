@@ -3,86 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#1a1621">
+  <meta name="theme-color" content="#000000">
   <title>The £5 Pint Clock</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main>
-    <header>
-      <h1>The £5 Pint Clock</h1>
-      <p class="subtitle">Tracking Britain's march toward the first £5 average pint</p>
-    </header>
-
-    <section class="countdown">
-      <div class="timer">
-        <div class="timer-segment">
-          <span class="timer-value" id="years">00</span>
-          <span class="timer-label">YEARS</span>
-        </div>
-        <div class="timer-segment">
-          <span class="timer-value" id="months">00</span>
-          <span class="timer-label">MONTHS</span>
-        </div>
-        <div class="timer-segment">
-          <span class="timer-value" id="days">00</span>
-          <span class="timer-label">DAYS</span>
-        </div>
+  <div class="container">
+    <h1>The £5 Pint Clock</h1>
+    
+    <div class="countdown">
+      <div class="segment">
+        <div class="value" id="years">00</div>
+        <div class="label">Years</div>
       </div>
-      <p class="timer-subtitle">Estimated time until £5 average pint</p>
-    </section>
-
-    <section class="clock">
+      <div class="segment">
+        <div class="value" id="months">00</div>
+        <div class="label">Months</div>
+      </div>
+      <div class="segment">
+        <div class="value" id="days">00</div>
+        <div class="label">Days</div>
+      </div>
+      <div class="segment">
+        <div class="value" id="hours">00</div>
+        <div class="label">Hours</div>
+      </div>
+      <div class="segment">
+        <div class="value" id="minutes">00</div>
+        <div class="label">Minutes</div>
+      </div>
+      <div class="segment">
+        <div class="value" id="seconds">00</div>
+        <div class="label">Seconds</div>
+      </div>
+    </div>
+    
+    <div class="info">Until the UK average pint reaches £5.00</div>
+    
+    <div class="metrics">
       <div class="metric">
-        <span class="label">UK Average Pint</span>
-        <span class="value" id="current">£4.83</span>
+        <div class="metric-label">Current</div>
+        <div class="metric-value" id="current">£4.83</div>
       </div>
       <div class="metric">
-        <span class="label">Distance to £5</span>
-        <span class="value danger" id="distance">£0.17</span>
+        <div class="metric-label">Target</div>
+        <div class="metric-value">£5.00</div>
       </div>
       <div class="metric">
-        <span class="label">Progress</span>
-        <span class="value" id="progress">96.6%</span>
+        <div class="metric-label">Progress</div>
+        <div class="metric-value" id="progress">96.6%</div>
       </div>
-    </section>
-
-    <section class="timeline">
-      <h2>Price History</h2>
-      <canvas id="priceChart" width="700" height="300"></canvas>
-    </section>
-
-    <section class="context">
-      <h2>Why £5?</h2>
-      <p>Every generation has a pint price that feels outrageous. £1 in the 80s. £3 in the 2000s.</p>
-      <p>The next psychological barrier? <strong>£5 for the average pint.</strong></p>
-      <p>At £4.83 (Jan 2025), we're closer than ever. This clock tracks how close we are to the first £5 average pint across Britain.</p>
-    </section>
-
-    <section class="work">
-      <h2>Minutes of Work per Pint</h2>
-      <div class="salary-input">
-        <label for="salary">Your Annual Salary: £<span id="salaryDisplay">30000</span></label>
-        <input type="range" id="salary" min="20000" max="150000" step="1000" value="30000">
-      </div>
-      <div class="work-metric">
-        <span class="label">£5 pint</span>
-        <span class="value warn" id="fivePintMinutes">26 minutes work</span>
-      </div>
-      <div class="work-metric">
-        <span class="label">£8 pint</span>
-        <span class="value danger" id="eightPintMinutes">42 minutes work</span>
-      </div>
-    </section>
-
-    <footer>
-      <p>Data: ONS Average Price of Draught Lager (CZMS series)</p>
-      <p>Last updated: 2025 JAN</p>
-    </footer>
-  </main>
+    </div>
+    
+    <div class="footer">
+      Data: ONS Average Price of Draught Lager (CZMS) · <span id="updated">2025 JAN</span>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
