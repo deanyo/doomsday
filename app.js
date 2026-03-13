@@ -175,27 +175,20 @@ function initChart() {
   // CRITICAL: Sort by yearDecimal to ensure chronological order
   uniqueHistorical.sort((a, b) => a.yearDecimal - b.yearDecimal);
   
-  // Prediction data - start from latest point to ensure smooth transition
+  // Prediction data - force smooth transition by starting from actual latest price
   const latestYear = latestData.yearDecimal;
+  const latestPrice = latestData.price;
   const predictionData = [];
   
-  // Start prediction from the next year after latest data
+  // Calculate what the regression would predict for each future year
   for (let y = Math.ceil(latestYear); y <= 2035; y++) {
+    // Adjust prediction to start from actual latest price, not regression intercept
+    const yearsFromLatest = y - latestYear;
+    const predictedPrice = latestPrice + (regression.slope * yearsFromLatest);
+    
     predictionData.push({
       yearDecimal: y,
-      price: regression.slope * y + regression.intercept
-    });
-  }
-  
-  // Add a connecting point at the exact latest data point using regression
-  // This ensures smooth transition from historical to predicted
-  const latestPredicted = regression.slope * latestYear + regression.intercept;
-  
-  // Only add if there's a gap (latest year is not a whole number)
-  if (latestYear % 1 !== 0) {
-    predictionData.unshift({
-      yearDecimal: latestYear,
-      price: latestPredicted
+      price: predictedPrice
     });
   }
   
@@ -317,11 +310,7 @@ function createReferenceLine(price) {
 function updateChart() {
   if (!chart) return;
   
-  // Update target line
-  chart.data.datasets[5].data = [
-    { x: 2000, y: targetPrice },
-    { x: 2035, y: targetPrice }
-  ];
+  // Chart only has 1 dataset now (main line), no target line to update
   chart.update();
 }
 
