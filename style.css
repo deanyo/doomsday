@@ -63,6 +63,52 @@ section {
   margin-bottom: 2rem;
 }
 
+.countdown {
+  background: var(--bg-darkest);
+  border: 2px solid var(--danger);
+  text-align: center;
+}
+
+.timer {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.timer-segment {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timer-value {
+  font-size: 4rem;
+  font-weight: bold;
+  color: var(--danger);
+  font-family: 'Courier New', monospace;
+  background: var(--bg-dark);
+  padding: 1rem 1.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  min-width: 120px;
+  letter-spacing: 0.1em;
+}
+
+.timer-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.timer-subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
+
 .clock {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -169,6 +215,16 @@ footer p {
 @media (max-width: 600px) {
   h1 {
     font-size: 1.8rem;
+  }
+  
+  .timer {
+    gap: 1rem;
+  }
+  
+  .timer-value {
+    font-size: 2.5rem;
+    padding: 0.75rem 1rem;
+    min-width: 80px;
   }
   
   .milestone {
