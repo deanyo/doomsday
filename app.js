@@ -172,6 +172,9 @@ function initChart() {
     uniqueHistorical.push(latestData);
   }
   
+  // CRITICAL: Sort by yearDecimal to ensure chronological order
+  uniqueHistorical.sort((a, b) => a.yearDecimal - b.yearDecimal);
+  
   // Prediction data - start from latest point
   const latestYear = latestData.yearDecimal;
   const predictionData = [];
