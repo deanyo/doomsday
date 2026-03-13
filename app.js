@@ -1,91 +1,247 @@
-// Parse ONS CSV data
-async function loadONSData() {
+// Parse ONS CSV and calculate regression
+let onsData = [];
+let regression = { slope: 0, intercept: 0 };
+let currentPrice = 4.83;
+let currentDate = '2025 JAN';
+let targetPrice = 5.00;
+let chart = null;
+
+async function loadData() {
   const response = await fetch('ons/series-130326.csv');
   const text = await response.text();
-  const lines = text.split('\n');
+  const lines = text.split('\n').slice(8); // Skip header rows
   
-  let latestPrice = null;
-  let latestDate = null;
+  const monthMap = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
   
-  for (let i = lines.length - 1; i >= 0; i--) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    
-    const match = line.match(/"(\d{4} [A-Z]{3})","(\d+)"/);
+  for (const line of lines) {
+    const match = line.match(/"(\d{4})(?: ([A-Z]{3}))?","(\d+)"/);
     if (match) {
-      latestDate = match[1];
-      latestPrice = parseInt(match[2]) / 100;
-      break;
+      const year = parseInt(match[1]);
+      const month = match[2] ? monthMap[match[2]] : 0;
+      const price = parseInt(match[3]) / 100;
+      const yearDecimal = year + month / 12;
+      onsData.push({ year, month, yearDecimal, price });
     }
   }
   
-  return { price: latestPrice, date: latestDate };
+  // Get latest price
+  const latest = onsData[onsData.length - 1];
+  currentPrice = latest.price;
+  currentDate = `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][latest.month]} ${latest.year}`;
+  
+  // Calculate regression from 2015 onwards
+  const recentData = onsData.filter(d => d.year >= 2015);
+  const n = recentData.length;
+  const sumX = recentData.reduce((sum, d) => sum + d.yearDecimal, 0);
+  const sumY = recentData.reduce((sum, d) => sum + d.price, 0);
+  const sumXY = recentData.reduce((sum, d) => sum + d.yearDecimal * d.price, 0);
+  const sumX2 = recentData.reduce((sum, d) => sum + d.yearDecimal * d.yearDecimal, 0);
+  
+  regression.slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  regression.intercept = (sumY - regression.slope * sumX) / n;
+  
+  updateUI();
+  initChart();
+  startCountdown();
 }
 
-function calculateTargetDate(currentPrice, target = 5) {
-  const annualIncrease = 0.24;
+function getTargetDate(target) {
+  const yearsFromNow = (target - currentPrice) / regression.slope;
+  const latest = onsData[onsData.length - 1];
+  const latestYear = latest.yearDecimal;
+  const targetYear = latestYear + yearsFromNow;
+  
+  const year = Math.floor(targetYear);
+  const monthDecimal = (targetYear - year) * 12;
+  const month = Math.floor(monthDecimal);
+  const day = Math.floor((monthDecimal - month) * 30) + 1;
+  
+  return new Date(year, month, day);
+}
+
+function updateUI() {
+  const target = targetPrice;
+  const targetDate = getTargetDate(target);
   const remaining = target - currentPrice;
-  const yearsToTarget = remaining / annualIncrease;
-  const millisecondsToTarget = yearsToTarget * 365.25 * 24 * 60 * 60 * 1000;
+  const yearlyRise = regression.slope;
+  const yearlyPercent = (yearlyRise / currentPrice) * 100;
+  const monthlyRise = yearlyRise / 12;
   
-  return new Date(Date.now() + millisecondsToTarget);
+  document.getElementById('current-price').textContent = `£${currentPrice.toFixed(2)}`;
+  document.getElementById('current-date').textContent = `${currentDate} (latest ONS)`;
+  document.getElementById('target-price').textContent = `£${target.toFixed(2)}`;
+  document.getElementById('target-display').textContent = target.toFixed(2);
+  document.getElementById('remaining').textContent = `£${remaining.toFixed(2)} to go`;
+  
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dateStr = `${months[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
+  const dayStr = `${targetDate.getDate()}${getOrdinal(targetDate.getDate())} ${months[targetDate.getMonth()]}`;
+  
+  document.getElementById('predicted-date').textContent = dateStr;
+  document.getElementById('predicted-day').textContent = dayStr;
+  document.getElementById('yearly-rise').textContent = `+${yearlyPercent.toFixed(1)}%`;
+  document.getElementById('monthly-rise').textContent = `≈ +${Math.round(monthlyRise * 100)}p/month`;
+  
+  if (chart) {
+    updateChart();
+  }
 }
 
-function updateCountdown(targetDate) {
-  const now = new Date();
-  const diff = targetDate - now;
-  
-  if (diff <= 0) {
-    document.getElementById('years').textContent = '00';
-    document.getElementById('months').textContent = '00';
-    document.getElementById('days').textContent = '00';
-    document.getElementById('hours').textContent = '00';
-    document.getElementById('minutes').textContent = '00';
-    document.getElementById('seconds').textContent = '00';
-    return;
+function getOrdinal(n) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
+}
+
+function startCountdown() {
+  function update() {
+    const targetDate = getTargetDate(targetPrice);
+    const now = new Date();
+    const diff = targetDate - now;
+    
+    if (diff <= 0) {
+      document.getElementById('status-badge').textContent = 'Target Reached!';
+      document.getElementById('days').textContent = '000';
+      document.getElementById('hours').textContent = '00';
+      document.getElementById('minutes').textContent = '00';
+      document.getElementById('seconds').textContent = '00';
+      return;
+    }
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    document.getElementById('days').textContent = String(days).padStart(3, '0');
+    document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+    document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+    document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
   }
   
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  const months = Math.floor(days / 30.44);
-  const years = Math.floor(months / 12);
+  update();
+  setInterval(update, 1000);
+}
+
+function initChart() {
+  const ctx = document.getElementById('price-chart').getContext('2d');
   
-  document.getElementById('years').textContent = String(years).padStart(2, '0');
-  document.getElementById('months').textContent = String(months % 12).padStart(2, '0');
-  document.getElementById('days').textContent = String(days % 30).padStart(2, '0');
-  document.getElementById('hours').textContent = String(hours % 24).padStart(2, '0');
-  document.getElementById('minutes').textContent = String(minutes % 60).padStart(2, '0');
-  document.getElementById('seconds').textContent = String(seconds % 60).padStart(2, '0');
+  // Historical data (every 2 years for cleaner chart)
+  const historicalData = onsData.filter((d, i) => i % 24 === 0 || i === onsData.length - 1);
+  
+  // Prediction data
+  const latestYear = onsData[onsData.length - 1].yearDecimal;
+  const predictionYears = [];
+  for (let y = Math.floor(latestYear); y <= 2035; y++) {
+    predictionYears.push(y);
+  }
+  const predictionData = predictionYears.map(y => ({
+    yearDecimal: y,
+    price: regression.slope * y + regression.intercept
+  }));
+  
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      datasets: [
+        {
+          label: 'Historical',
+          data: historicalData.map(d => ({ x: d.yearDecimal, y: d.price })),
+          borderColor: '#ffb347',
+          backgroundColor: 'rgba(255, 179, 71, 0.1)',
+          borderWidth: 3,
+          pointRadius: 0,
+          tension: 0.1
+        },
+        {
+          label: 'Predicted',
+          data: predictionData.map(d => ({ x: d.yearDecimal, y: d.price })),
+          borderColor: 'rgba(255, 179, 71, 0.5)',
+          borderDash: [10, 5],
+          borderWidth: 3,
+          pointRadius: 0,
+          tension: 0
+        },
+        {
+          label: 'Target',
+          data: [
+            { x: 2010, y: targetPrice },
+            { x: 2035, y: targetPrice }
+          ],
+          borderColor: 'rgba(255, 100, 100, 0.6)',
+          borderDash: [5, 5],
+          borderWidth: 2,
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (context) => `£${context.parsed.y.toFixed(2)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          title: { display: false },
+          grid: { color: 'rgba(255, 179, 71, 0.1)' },
+          ticks: { color: '#999' }
+        },
+        y: {
+          title: { display: false },
+          grid: { color: 'rgba(255, 179, 71, 0.1)' },
+          ticks: {
+            color: '#999',
+            callback: (value) => `£${value.toFixed(2)}`
+          }
+        }
+      }
+    }
+  });
+}
+
+function updateChart() {
+  if (!chart) return;
+  
+  chart.data.datasets[2].data = [
+    { x: 2010, y: targetPrice },
+    { x: 2035, y: targetPrice }
+  ];
+  chart.update();
+}
+
+// Threshold controls
+document.getElementById('threshold').addEventListener('input', (e) => {
+  targetPrice = parseFloat(e.target.value);
+  updateUI();
+  updatePresetButtons();
+});
+
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    targetPrice = parseFloat(btn.dataset.value);
+    document.getElementById('threshold').value = targetPrice.toFixed(2);
+    updateUI();
+    updatePresetButtons();
+  });
+});
+
+function updatePresetButtons() {
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    if (Math.abs(parseFloat(btn.dataset.value) - targetPrice) < 0.01) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
 }
 
 // Initialize
-document.addEventListener('DOMContentLoaded', async () => {
-  try {
-    const ons = await loadONSData();
-    const progress = (ons.price / 5) * 100;
-    
-    document.getElementById('current').textContent = `£${ons.price.toFixed(2)}`;
-    document.getElementById('progress').textContent = `${progress.toFixed(1)}%`;
-    document.getElementById('updated').textContent = ons.date;
-    
-    const targetDate = calculateTargetDate(ons.price);
-    
-    // Update countdown every second
-    updateCountdown(targetDate);
-    setInterval(() => updateCountdown(targetDate), 1000);
-    
-  } catch (error) {
-    console.error('Failed to load ONS data:', error);
-    
-    // Fallback
-    document.getElementById('current').textContent = '£4.83';
-    document.getElementById('progress').textContent = '96.6%';
-    document.getElementById('updated').textContent = '2025 JAN';
-    
-    const targetDate = calculateTargetDate(4.83);
-    updateCountdown(targetDate);
-    setInterval(() => updateCountdown(targetDate), 1000);
-  }
-});
+loadData();
+updatePresetButtons();
