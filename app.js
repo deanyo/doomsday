@@ -145,14 +145,31 @@ function startCountdown() {
 function initChart() {
   const ctx = document.getElementById('price-chart').getContext('2d');
   
-  // Historical data from 2000 onwards (annual only, no duplicates)
-  const historicalData = onsData.filter(d => d.year >= 2000 && d.month === 0);
+  // Historical data from 2000 onwards - ONLY annual entries (no month specified in CSV)
+  // Filter out monthly data to avoid duplicates
+  const historicalData = onsData.filter(d => {
+    // Only include if year >= 2000 AND it's an annual entry (month would be 0 for both annual and January)
+    // We need to check the original data structure - annual entries have no month in the CSV
+    return d.year >= 2000 && d.month === 0;
+  });
+  
+  // Remove duplicates by keeping only unique years
+  const uniqueHistorical = [];
+  const seenYears = new Set();
+  for (const d of historicalData) {
+    const yearKey = Math.floor(d.yearDecimal);
+    if (!seenYears.has(yearKey)) {
+      seenYears.add(yearKey);
+      uniqueHistorical.push(d);
+    }
+  }
+  
   const latestData = onsData[onsData.length - 1];
   
   // Only add latest if it's not already in the annual data
-  const lastHistorical = historicalData[historicalData.length - 1];
-  if (lastHistorical.yearDecimal !== latestData.yearDecimal) {
-    historicalData.push(latestData);
+  const lastHistorical = uniqueHistorical[uniqueHistorical.length - 1];
+  if (!lastHistorical || lastHistorical.yearDecimal !== latestData.yearDecimal) {
+    uniqueHistorical.push(latestData);
   }
   
   // Prediction data - start from latest point
@@ -166,16 +183,16 @@ function initChart() {
   }
   
   // Find transition point for styling
-  const transitionIndex = historicalData.length - 1;
+  const transitionIndex = uniqueHistorical.length - 1;
   
   // Single continuous line
   const lineData = [
-    ...historicalData.map(d => ({ x: d.yearDecimal, y: d.price })),
+    ...uniqueHistorical.map(d => ({ x: d.yearDecimal, y: d.price })),
     ...predictionData.map(d => ({ x: d.yearDecimal, y: d.price }))
   ];
   
   // Debug: log the data
-  console.log('Historical points:', historicalData.length);
+  console.log('Historical points:', uniqueHistorical.length);
   console.log('Prediction points:', predictionData.length);
   console.log('Total chart points:', lineData.length);
   console.log('Transition at index:', transitionIndex);
@@ -192,6 +209,8 @@ function initChart() {
   if (duplicates.length > 0) {
     console.error('DUPLICATE X VALUES FOUND:', duplicates);
     console.log('Full data with duplicates:', lineData.filter(d => duplicates.includes(d.x)));
+  } else {
+    console.log('✓ No duplicates found');
   }
   
   chart = new Chart(ctx, {
