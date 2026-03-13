@@ -175,13 +175,27 @@ function initChart() {
   // CRITICAL: Sort by yearDecimal to ensure chronological order
   uniqueHistorical.sort((a, b) => a.yearDecimal - b.yearDecimal);
   
-  // Prediction data - start from latest point
+  // Prediction data - start from latest point to ensure smooth transition
   const latestYear = latestData.yearDecimal;
   const predictionData = [];
+  
+  // Start prediction from the next year after latest data
   for (let y = Math.ceil(latestYear); y <= 2035; y++) {
     predictionData.push({
       yearDecimal: y,
       price: regression.slope * y + regression.intercept
+    });
+  }
+  
+  // Add a connecting point at the exact latest data point using regression
+  // This ensures smooth transition from historical to predicted
+  const latestPredicted = regression.slope * latestYear + regression.intercept;
+  
+  // Only add if there's a gap (latest year is not a whole number)
+  if (latestYear % 1 !== 0) {
+    predictionData.unshift({
+      yearDecimal: latestYear,
+      price: latestPredicted
     });
   }
   
