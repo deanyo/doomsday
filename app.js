@@ -23,7 +23,7 @@ async function loadONSData() {
   return { price: latestPrice, date: latestDate };
 }
 
-function calculateMetrics(currentPrice, target = 8) {
+function calculateMetrics(currentPrice, target = 5) {
   const difference = target - currentPrice;
   const progress = (currentPrice / target) * 100;
   
@@ -35,7 +35,7 @@ function calculateMetrics(currentPrice, target = 8) {
   };
 }
 
-function estimateTimeToTarget(currentPrice, target = 8) {
+function estimateTimeToTarget(currentPrice, target = 5) {
   // Calculate average annual increase from recent ONS data
   // 2022: £4.10, 2023: £4.56, 2024: £4.77, 2025: £4.83
   // Average increase: ~£0.24/year over last 3 years
@@ -81,12 +81,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.error('Failed to load ONS data:', error);
     // Fallback to static data
-    updateCountdown({ years: 13, months: 2, days: 15 });
+    updateCountdown({ years: 0, months: 8, days: 21 });
     updateClock({
       current: 4.83,
-      target: 8,
-      difference: 3.17,
-      progress: 60.4,
+      target: 5,
+      difference: 0.17,
+      progress: 96.6,
       date: '2025 JAN'
     });
   }
