@@ -27,20 +27,7 @@ function populateVenueSelect() {
 function renderMap(selectedVenue) {
   const regionMap = document.getElementById('region-map');
   regionMap.innerHTML = `
-    <svg class="map-backdrop" viewBox="0 0 1000 1200" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
-      <g class="map-outline">
-        <path d="M506 84L575 116L621 163L652 225L648 290L674 346L668 424L692 483L680 572L643 657L602 716L593 790L619 856L603 934L555 1006L489 1061L431 1048L393 995L399 916L366 844L310 774L274 709L255 628L256 549L284 473L323 414L357 349L392 286L424 213L460 150Z" />
-        <path d="M247 347L286 370L314 410L307 480L280 539L238 582L188 565L162 522L160 462L184 397Z" />
-        <path d="M167 371L185 387L182 413L160 429L141 414L145 388Z" />
-        <path d="M571 123L604 137L628 163L621 193L591 203L567 180L560 148Z" />
-        <path d="M648 148L679 163L701 190L695 220L664 228L639 205L633 177Z" />
-        <path d="M739 217L760 228L774 249L769 271L748 278L730 262L726 240Z" />
-        <path d="M313 517L330 528L334 548L321 565L300 567L288 553L291 532Z" />
-        <path d="M235 571L252 583L255 603L242 619L222 621L209 605L213 584Z" />
-        <path d="M563 1043L580 1057L583 1078L568 1096L546 1099L531 1081L536 1059Z" />
-        <path class="map-border" d="M229 398L257 408L278 435L273 482L253 523" />
-      </g>
-    </svg>
+    <img class="map-backdrop map-backdrop-image" src="united-kingdom.svg" alt="" aria-hidden="true">
     ${regionModels.map((region) => {
       const estimatedPrice = atlasCurrentPrice * region.multiplier * selectedVenue.multiplier;
       return `
