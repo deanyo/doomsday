@@ -1,9 +1,45 @@
 const { regionModels, venueModels } = window.DOOMSDAY_MODEL;
 const monthMap = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
 const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const atlasSvgRegionTitles = {
+  'london-core': 'Greater London',
+  'london-orbit': 'Greater London',
+  'northern-ireland': 'Northern Ireland',
+  scotland: 'Scotland',
+  wales: 'Wales',
+  'north-east': 'North East',
+  'north-west': 'North West',
+  'yorkshire-humber': 'Yorkshire and the Humber',
+  'east-midlands': 'East Midlands',
+  'west-midlands': 'West Midlands',
+  'east-of-england': 'East of England',
+  'south-west': 'South West',
+  'south-east': 'South East'
+};
+const atlasCardSides = {
+  scotland: 'left',
+  'northern-ireland': 'left',
+  'north-west': 'left',
+  wales: 'left',
+  'west-midlands': 'left',
+  'south-west': 'left',
+  'north-east': 'right',
+  'yorkshire-humber': 'right',
+  'east-midlands': 'right',
+  'east-of-england': 'right',
+  'london-core': 'right',
+  'london-orbit': 'right',
+  'south-east': 'right'
+};
+const atlasAnchorAdjustments = {
+  'london-core': { x: 10, y: -10 },
+  'london-orbit': { x: -12, y: 14 }
+};
 
 let atlasCurrentPrice = 4.83;
 let atlasCurrentDate = 'Jan 2025';
+let atlasSvgMarkup = '';
+let atlasResizeFrame = 0;
 
 function formatAtlasCurrency(value) {
   return `£${value.toFixed(2)}`;
@@ -17,6 +53,10 @@ function getVenueModel(venueKey) {
   return venueModels.find((venue) => venue.key === venueKey) || venueModels[0];
 }
 
+function getMapRegions() {
+  return regionModels.filter((region) => region.key !== 'gb');
+}
+
 function populateVenueSelect() {
   const select = document.getElementById('atlas-venue-select');
   select.innerHTML = venueModels.map((venue) => (
@@ -24,42 +64,190 @@ function populateVenueSelect() {
   )).join('');
 }
 
-function getConnectorMarkup(region) {
-  const labelX = region.labelX ?? region.mapX;
-  const labelY = region.labelY ?? region.mapY;
-  const deltaX = labelX - region.mapX;
-  const deltaY = labelY - region.mapY;
-  const length = Math.hypot(deltaX, deltaY);
+function buildAtlasSvgMarkup(svgText) {
+  const parser = new DOMParser();
+  const svgDocument = parser.parseFromString(svgText, 'image/svg+xml');
+  const svg = svgDocument.documentElement;
 
-  if (length < 1) {
-    return '';
+  if (!svg.getAttribute('viewBox')) {
+    const width = parseFloat(svg.getAttribute('width'));
+    const height = parseFloat(svg.getAttribute('height'));
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
   }
 
-  const angle = (Math.atan2(deltaY, deltaX) * 180) / Math.PI;
+  svg.removeAttribute('width');
+  svg.removeAttribute('height');
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  svg.classList.add('map-backdrop', 'map-backdrop-inline');
+
+  Array.from(svg.querySelectorAll('path')).forEach((path) => {
+    path.classList.add('map-region-shape');
+  });
+
+  return svg.outerHTML;
+}
+
+async function loadAtlasSvg() {
+  const response = await fetch('united-kingdom.svg');
+  const svgText = await response.text();
+  atlasSvgMarkup = buildAtlasSvgMarkup(svgText);
+}
+
+function getMapCardMarkup(region, selectedVenue) {
+  const estimatedPrice = atlasCurrentPrice * region.multiplier * selectedVenue.multiplier;
   return `
-    <span class="map-link" style="left:${region.mapX}%; top:${region.mapY}%; width:${length}%; transform:translateY(-50%) rotate(${angle}deg);"></span>
-    <span class="map-pin" style="left:${region.mapX}%; top:${region.mapY}%;"></span>
+    <article class="map-card" data-region-key="${region.key}">
+      <span class="map-card-name">${region.label}</span>
+      <strong class="map-card-price">${formatAtlasCurrency(estimatedPrice)}</strong>
+      <span class="map-card-meta">${formatAtlasMultiplier(region.multiplier)} region</span>
+    </article>
   `;
+}
+
+function getAtlasAnchorPoint(svg, region) {
+  const regionTitle = atlasSvgRegionTitles[region.key];
+  if (!regionTitle) {
+    return null;
+  }
+
+  const regionPath = Array.from(svg.querySelectorAll('path')).find((path) => path.getAttribute('title') === regionTitle);
+  if (!regionPath) {
+    return null;
+  }
+
+  const box = regionPath.getBBox();
+  const adjustment = atlasAnchorAdjustments[region.key] || { x: 0, y: 0 };
+  const anchorX = box.x + (box.width / 2) + adjustment.x;
+  const anchorY = box.y + (box.height / 2) + adjustment.y;
+  const svgBounds = svg.getBoundingClientRect();
+  const viewBox = svg.viewBox.baseVal;
+
+  return {
+    x: svgBounds.left + (((anchorX - viewBox.x) / viewBox.width) * svgBounds.width),
+    y: svgBounds.top + (((anchorY - viewBox.y) / viewBox.height) * svgBounds.height)
+  };
+}
+
+function sortMapCardsByAnchor(mapLayout, svg) {
+  ['left', 'right'].forEach((side) => {
+    const rail = mapLayout.querySelector(`.map-rail-${side}`);
+    if (!rail) {
+      return;
+    }
+
+    const orderedRegions = getMapRegions()
+      .filter((region) => (atlasCardSides[region.key] || 'right') === side)
+      .map((region) => ({
+        region,
+        anchorPoint: getAtlasAnchorPoint(svg, region)
+      }))
+      .sort((left, right) => {
+        const leftY = left.anchorPoint ? left.anchorPoint.y : 0;
+        const rightY = right.anchorPoint ? right.anchorPoint.y : 0;
+        return leftY - rightY;
+      });
+
+    orderedRegions.forEach(({ region }) => {
+      const card = rail.querySelector(`.map-card[data-region-key="${region.key}"]`);
+      if (card) {
+        rail.appendChild(card);
+      }
+    });
+  });
+}
+
+function drawMapOverlay() {
+  const mapLayout = document.getElementById('map-layout');
+  if (!mapLayout) {
+    return;
+  }
+
+  const svg = mapLayout.querySelector('.map-backdrop-inline');
+  const overlay = mapLayout.querySelector('.map-overlay');
+  if (!svg || !overlay) {
+    return;
+  }
+
+  sortMapCardsByAnchor(mapLayout, svg);
+
+  const layoutBounds = mapLayout.getBoundingClientRect();
+  overlay.setAttribute('viewBox', `0 0 ${layoutBounds.width} ${layoutBounds.height}`);
+  overlay.innerHTML = '';
+
+  const regions = getMapRegions();
+
+  regions.forEach((region) => {
+    const anchorPoint = getAtlasAnchorPoint(svg, region);
+    const card = mapLayout.querySelector(`.map-card[data-region-key="${region.key}"]`);
+
+    if (!anchorPoint || !card) {
+      return;
+    }
+
+    const cardBounds = card.getBoundingClientRect();
+    const pinX = anchorPoint.x - layoutBounds.left;
+    const pinY = anchorPoint.y - layoutBounds.top;
+    const cardSide = atlasCardSides[region.key] || 'right';
+    const cardX = cardSide === 'left'
+      ? cardBounds.right - layoutBounds.left
+      : cardBounds.left - layoutBounds.left;
+    const cardY = (cardBounds.top - layoutBounds.top) + (cardBounds.height / 2);
+    const elbowX = cardSide === 'left'
+      ? Math.min(pinX - 18, cardX + 24)
+      : Math.max(pinX + 18, cardX - 24);
+
+    overlay.insertAdjacentHTML('beforeend', `
+      <path class="map-connector" d="M ${pinX} ${pinY} L ${elbowX} ${pinY} L ${cardX} ${cardY}"></path>
+      <circle class="map-pin-halo" cx="${pinX}" cy="${pinY}" r="7"></circle>
+      <circle class="map-pin-dot" cx="${pinX}" cy="${pinY}" r="3.5"></circle>
+    `);
+  });
+}
+
+function scheduleMapOverlay() {
+  if (atlasResizeFrame) {
+    cancelAnimationFrame(atlasResizeFrame);
+  }
+
+  atlasResizeFrame = requestAnimationFrame(() => {
+    atlasResizeFrame = 0;
+    drawMapOverlay();
+  });
 }
 
 function renderMap(selectedVenue) {
   const regionMap = document.getElementById('region-map');
+  const baseline = regionModels.find((region) => region.key === 'gb') || regionModels[0];
+  const baselinePrice = atlasCurrentPrice * baseline.multiplier * selectedVenue.multiplier;
+  const mapRegions = [...getMapRegions()].sort((left, right) => left.mapY - right.mapY);
+  const leftCards = mapRegions
+    .filter((region) => (atlasCardSides[region.key] || 'right') === 'left')
+    .map((region) => getMapCardMarkup(region, selectedVenue))
+    .join('');
+  const rightCards = mapRegions
+    .filter((region) => (atlasCardSides[region.key] || 'right') === 'right')
+    .map((region) => getMapCardMarkup(region, selectedVenue))
+    .join('');
+
   regionMap.innerHTML = `
-    <img class="map-backdrop map-backdrop-image" src="united-kingdom.svg" alt="" aria-hidden="true">
-    ${regionModels.map((region) => {
-      const estimatedPrice = atlasCurrentPrice * region.multiplier * selectedVenue.multiplier;
-      const labelX = region.labelX ?? region.mapX;
-      const labelY = region.labelY ?? region.mapY;
-      return `
-        ${getConnectorMarkup(region)}
-        <article class="map-chip${region.key === 'gb' ? ' map-chip-anchor' : ''}" style="left:${labelX}%; top:${labelY}%;">
-          <span class="map-chip-name">${region.label}</span>
-          <strong class="map-chip-price">${formatAtlasCurrency(estimatedPrice)}</strong>
-          <span class="map-chip-meta">${formatAtlasMultiplier(region.multiplier)} region</span>
-        </article>
-      `;
-    }).join('')}
+    <div class="map-baseline-card">
+      <span class="map-baseline-label">UK average baseline</span>
+      <strong class="map-baseline-price">${formatAtlasCurrency(baselinePrice)}</strong>
+      <span class="map-baseline-meta">${formatAtlasMultiplier(selectedVenue.multiplier)} venue context applied</span>
+    </div>
+    <div class="map-layout" id="map-layout">
+      <div class="map-rail map-rail-left">${leftCards}</div>
+      <div class="map-center">
+        <div class="map-viewport">
+          ${atlasSvgMarkup}
+        </div>
+      </div>
+      <div class="map-rail map-rail-right">${rightCards}</div>
+      <svg class="map-overlay" aria-hidden="true"></svg>
+    </div>
   `;
+
+  scheduleMapOverlay();
 }
 
 function renderTable(selectedVenue) {
@@ -115,12 +303,21 @@ async function loadOnsBaseline() {
 async function initAtlas() {
   populateVenueSelect();
   document.getElementById('atlas-venue-select').addEventListener('change', renderAtlas);
+  window.addEventListener('resize', scheduleMapOverlay);
 
   try {
     await loadOnsBaseline();
   } catch (error) {
     console.warn('Could not load ONS baseline for atlas page', error);
     document.getElementById('atlas-status').textContent = 'could not fetch the ons baseline, so this page is using the fallback £4.83 average.';
+  }
+
+  try {
+    await loadAtlasSvg();
+  } catch (error) {
+    console.warn('Could not load atlas SVG backdrop', error);
+    document.getElementById('region-map').innerHTML = '<p class="location-status">could not load the uk outline for this page.</p>';
+    return;
   }
 
   renderAtlas();
