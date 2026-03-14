@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -20,6 +20,13 @@
     </header>
 
     <div class="clock">
+      <div class="clock-year-group is-hidden" id="years-group">
+        <div class="clock-segment">
+          <div class="clock-value" id="years">00</div>
+          <div class="clock-label">Years</div>
+        </div>
+        <div class="clock-separator">:</div>
+      </div>
       <div class="clock-segment">
         <div class="clock-value" id="days">000</div>
         <div class="clock-label">Days</div>
@@ -84,6 +91,8 @@
         </label>
       </div>
 
+      <p class="panel-link-row"><a href="regions.html">view the multiplier map</a></p>
+
       <p class="location-status" id="location-status">using the uk baseline until you pick a region or share your browser location.</p>
 
       <div class="local-stats">
@@ -137,6 +146,7 @@
     </footer>
   </div>
 
-  <script src="app.js?v=3"></script>
+  <script src="pricing-model.js"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

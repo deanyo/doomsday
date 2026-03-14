@@ -1,29 +1,8 @@
 // Parse ONS CSV and calculate regression
 const LOCATION_STORAGE_KEY = 'doomsday-location-model-v1';
-const EIGHT_POUND_PINT = 8;
+const { eightPoundPint: EIGHT_POUND_PINT, regionModels: REGION_MODELS, venueModels: VENUE_MODELS } = window.DOOMSDAY_MODEL;
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTH_MAP = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
-const REGION_MODELS = [
-  { key: 'gb', label: 'UK average', multiplier: 1.0 },
-  { key: 'london', label: 'London', multiplier: 1.35, bounds: { minLat: 51.28, maxLat: 51.72, minLng: -0.55, maxLng: 0.35 } },
-  { key: 'northern-ireland', label: 'Northern Ireland', multiplier: 0.96, bounds: { minLat: 54.0, maxLat: 55.45, minLng: -8.35, maxLng: -5.25 } },
-  { key: 'scotland', label: 'Scotland', multiplier: 1.05, bounds: { minLat: 54.55, maxLat: 60.95, minLng: -8.15, maxLng: -0.45 } },
-  { key: 'wales', label: 'Wales', multiplier: 0.93, bounds: { minLat: 51.3, maxLat: 53.55, minLng: -5.75, maxLng: -2.45 } },
-  { key: 'north-east', label: 'North East', multiplier: 0.95, bounds: { minLat: 54.45, maxLat: 55.85, minLng: -2.7, maxLng: -0.75 } },
-  { key: 'north-west', label: 'North West', multiplier: 1.01, bounds: { minLat: 53.15, maxLat: 55.45, minLng: -3.75, maxLng: -1.95 } },
-  { key: 'yorkshire-humber', label: 'Yorkshire and the Humber', multiplier: 0.99, bounds: { minLat: 53.25, maxLat: 54.85, minLng: -2.35, maxLng: 0.25 } },
-  { key: 'east-midlands', label: 'East Midlands', multiplier: 0.97, bounds: { minLat: 52.45, maxLat: 53.8, minLng: -1.95, maxLng: 0.45 } },
-  { key: 'west-midlands', label: 'West Midlands', multiplier: 0.98, bounds: { minLat: 51.8, maxLat: 53.35, minLng: -3.25, maxLng: -1.1 } },
-  { key: 'east-of-england', label: 'East of England', multiplier: 1.08, bounds: { minLat: 51.55, maxLat: 53.55, minLng: -0.85, maxLng: 1.85 } },
-  { key: 'south-west', label: 'South West', multiplier: 1.04, bounds: { minLat: 49.85, maxLat: 51.85, minLng: -6.6, maxLng: -1.45 } },
-  { key: 'south-east', label: 'South East', multiplier: 1.12, bounds: { minLat: 50.65, maxLat: 51.95, minLng: -1.9, maxLng: 1.55 } }
-];
-const VENUE_MODELS = [
-  { key: 'standard', label: 'Neighbourhood pub', multiplier: 1.0 },
-  { key: 'city-centre', label: 'City centre', multiplier: 1.12 },
-  { key: 'tourist-hotspot', label: 'Tourist hotspot', multiplier: 1.25 },
-  { key: 'travel-hub', label: 'Station / airport / stadium', multiplier: 1.35 }
-];
 
 let onsData = [];
 let regression = { slope: 0, intercept: 0 };
@@ -63,6 +42,34 @@ function formatMultiplier(value) {
   return `${value.toFixed(2)}x`;
 }
 
+function getDistanceKm(latA, lngA, latB, lngB) {
+  const earthRadiusKm = 6371;
+  const toRadians = (value) => (value * Math.PI) / 180;
+  const deltaLat = toRadians(latB - latA);
+  const deltaLng = toRadians(lngB - lngA);
+  const startLat = toRadians(latA);
+  const endLat = toRadians(latB);
+  const haversine = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2)
+    + Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2) * Math.cos(startLat) * Math.cos(endLat);
+
+  return 2 * earthRadiusKm * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+function matchesRegion(region, latitude, longitude) {
+  if (region.matcher?.type === 'circle') {
+    return getDistanceKm(latitude, longitude, region.matcher.centerLat, region.matcher.centerLng) <= region.matcher.radiusKm;
+  }
+
+  if (region.bounds) {
+    return latitude >= region.bounds.minLat
+      && latitude <= region.bounds.maxLat
+      && longitude >= region.bounds.minLng
+      && longitude <= region.bounds.maxLng;
+  }
+
+  return false;
+}
+
 function loadLocationPreferences() {
   try {
     const raw = localStorage.getItem(LOCATION_STORAGE_KEY);
@@ -71,6 +78,9 @@ function loadLocationPreferences() {
     }
 
     const stored = JSON.parse(raw);
+    if (stored.regionKey === 'london') {
+      stored.regionKey = 'london-core';
+    }
     if (stored.regionKey && hasRegionModel(stored.regionKey)) {
       locationState.regionKey = stored.regionKey;
     }
@@ -160,16 +170,7 @@ function updateLocateButton(permissionState = locationState.permissionState) {
 }
 
 function resolveRegionByCoordinates(latitude, longitude) {
-  const matchedRegion = REGION_MODELS.find((region) => {
-    if (!region.bounds) {
-      return false;
-    }
-
-    return latitude >= region.bounds.minLat
-      && latitude <= region.bounds.maxLat
-      && longitude >= region.bounds.minLng
-      && longitude <= region.bounds.maxLng;
-  });
+  const matchedRegion = REGION_MODELS.find((region) => matchesRegion(region, latitude, longitude));
 
   return matchedRegion || getRegionModel('gb');
 }
@@ -214,6 +215,8 @@ function handleLocationSuccess(position) {
 
   if (region.key === 'gb') {
     setLocationStatus('browser location worked, but the coordinate fell outside the mocked uk region boxes, so this estimate stayed on the uk baseline.');
+  } else if (region.key === 'london-core') {
+    setLocationStatus('browser location landed inside the tighter london core zone. outer london and commuter towns should usually fall back into the surrounding regional boxes instead.');
   } else {
     setLocationStatus(`browser location mapped you to ${region.label.toLowerCase()} using a rough regional box. only the derived region is stored in this browser.`);
   }
@@ -389,6 +392,8 @@ function getOrdinal(n) {
 }
 
 function startCountdown() {
+  const yearsGroup = document.getElementById('years-group');
+
   function update() {
     const targetDate = getTargetDate(targetPrice);
     const now = new Date();
@@ -399,6 +404,8 @@ function startCountdown() {
       if (statusText) {
         statusText.textContent = 'target reached!';
       }
+      yearsGroup.classList.add('is-hidden');
+      document.getElementById('years').textContent = '00';
       document.getElementById('days').textContent = '000';
       document.getElementById('hours').textContent = '00';
       document.getElementById('minutes').textContent = '00';
@@ -406,11 +413,21 @@ function startCountdown() {
       return;
     }
     
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const totalDays = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const years = Math.floor(totalDays / 365);
+    const days = years > 0 ? totalDays % 365 : totalDays;
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
+
+    if (years > 0) {
+      yearsGroup.classList.remove('is-hidden');
+      document.getElementById('years').textContent = String(years).padStart(2, '0');
+    } else {
+      yearsGroup.classList.add('is-hidden');
+      document.getElementById('years').textContent = '00';
+    }
+
     document.getElementById('days').textContent = String(days).padStart(3, '0');
     document.getElementById('hours').textContent = String(hours).padStart(2, '0');
     document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a1621">
+  <title>The UK Pint Multiplier Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=4">
+</head>
+<body>
+  <div class="shell shell-wide">
+    <header class="hero hero-left">
+      <p class="eyebrow"><a href="index.html">back to the clock</a></p>
+      <h1>the uk pint multiplier map</h1>
+      <p class="description description-left">a schematic view of the mocked regional pricing model. this is not a boundary-accurate map, it is a transparent view of the rough multipliers the homepage uses.</p>
+    </header>
+
+    <section class="panel atlas-summary">
+      <div class="atlas-summary-row">
+        <div>
+          <h3>regional pricing model</h3>
+          <p class="panel-copy">the atlas starts from the latest ons average pint and layers on a regional multiplier plus the selected venue premium.</p>
+        </div>
+        <label class="field atlas-select">
+          <span class="field-label">venue context</span>
+          <select id="atlas-venue-select"></select>
+        </label>
+      </div>
+      <p class="location-status" id="atlas-status">loading current ons baseline...</p>
+    </section>
+
+    <section class="atlas-grid">
+      <div class="panel atlas-map-panel">
+        <h3>schematic map</h3>
+        <div class="map-surface" id="region-map"></div>
+      </div>
+      <div class="panel atlas-table-panel">
+        <h3>regional estimates</h3>
+        <div class="atlas-table" id="atlas-table"></div>
+      </div>
+    </section>
+  </div>
+
+  <script src="pricing-model.js"></script>
+  <script src="regions.js?v=1"></script>
+</body>
+</html>
