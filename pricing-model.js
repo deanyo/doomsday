@@ -15,6 +15,19 @@ window.DOOMSDAY_MODEL = {
       mapX: 72,
       mapY: 72
     },
+    {
+      key: 'london-orbit',
+      label: 'London orbit',
+      multiplier: 1.27,
+      matcher: {
+        type: 'circle',
+        centerLat: 51.5072,
+        centerLng: -0.1276,
+        radiusKm: 38
+      },
+      mapX: 74,
+      mapY: 78
+    },
     { key: 'northern-ireland', label: 'Northern Ireland', multiplier: 0.96, bounds: { minLat: 54.0, maxLat: 55.45, minLng: -8.35, maxLng: -5.25 }, mapX: 18, mapY: 40 },
     { key: 'scotland', label: 'Scotland', multiplier: 1.05, bounds: { minLat: 54.55, maxLat: 60.95, minLng: -8.15, maxLng: -0.45 }, mapX: 52, mapY: 13 },
     { key: 'wales', label: 'Wales', multiplier: 0.93, bounds: { minLat: 51.3, maxLat: 53.55, minLng: -5.75, maxLng: -2.45 }, mapX: 39, mapY: 58 },

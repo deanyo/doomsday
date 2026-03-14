@@ -79,7 +79,7 @@ function loadLocationPreferences() {
 
     const stored = JSON.parse(raw);
     if (stored.regionKey === 'london') {
-      stored.regionKey = 'london-core';
+      stored.regionKey = 'london-orbit';
     }
     if (stored.regionKey && hasRegionModel(stored.regionKey)) {
       locationState.regionKey = stored.regionKey;
@@ -217,6 +217,8 @@ function handleLocationSuccess(position) {
     setLocationStatus('browser location worked, but the coordinate fell outside the mocked uk region boxes, so this estimate stayed on the uk baseline.');
   } else if (region.key === 'london-core') {
     setLocationStatus('browser location landed inside the tighter london core zone. outer london and commuter towns should usually fall back into the surrounding regional boxes instead.');
+  } else if (region.key === 'london-orbit') {
+    setLocationStatus('browser location mapped you into the london orbit band. that is meant for outer london and nearby commuter-belt pricing without calling everything generic london.');
   } else {
     setLocationStatus(`browser location mapped you to ${region.label.toLowerCase()} using a rough regional box. only the derived region is stored in this browser.`);
   }
