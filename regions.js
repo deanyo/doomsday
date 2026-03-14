@@ -24,14 +24,35 @@ function populateVenueSelect() {
   )).join('');
 }
 
+function getConnectorMarkup(region) {
+  const labelX = region.labelX ?? region.mapX;
+  const labelY = region.labelY ?? region.mapY;
+  const deltaX = labelX - region.mapX;
+  const deltaY = labelY - region.mapY;
+  const length = Math.hypot(deltaX, deltaY);
+
+  if (length < 1) {
+    return '';
+  }
+
+  const angle = (Math.atan2(deltaY, deltaX) * 180) / Math.PI;
+  return `
+    <span class="map-link" style="left:${region.mapX}%; top:${region.mapY}%; width:${length}%; transform:translateY(-50%) rotate(${angle}deg);"></span>
+    <span class="map-pin" style="left:${region.mapX}%; top:${region.mapY}%;"></span>
+  `;
+}
+
 function renderMap(selectedVenue) {
   const regionMap = document.getElementById('region-map');
   regionMap.innerHTML = `
     <img class="map-backdrop map-backdrop-image" src="united-kingdom.svg" alt="" aria-hidden="true">
     ${regionModels.map((region) => {
       const estimatedPrice = atlasCurrentPrice * region.multiplier * selectedVenue.multiplier;
+      const labelX = region.labelX ?? region.mapX;
+      const labelY = region.labelY ?? region.mapY;
       return `
-        <article class="map-chip${region.key === 'gb' ? ' map-chip-anchor' : ''}" style="left:${region.mapX}%; top:${region.mapY}%;">
+        ${getConnectorMarkup(region)}
+        <article class="map-chip${region.key === 'gb' ? ' map-chip-anchor' : ''}" style="left:${labelX}%; top:${labelY}%;">
           <span class="map-chip-name">${region.label}</span>
           <strong class="map-chip-price">${formatAtlasCurrency(estimatedPrice)}</strong>
           <span class="map-chip-meta">${formatAtlasMultiplier(region.multiplier)} region</span>
