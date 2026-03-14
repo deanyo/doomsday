@@ -6,6 +6,8 @@ Tracking Britain's march toward the first £8 average pint.
 
 A doomsday clock for UK pint prices. The UK average draught lager pint is currently £4.83 (ONS, Jan 2025). This site tracks how close we are to the £8 psychological barrier already appearing in London pubs.
 
+It now also includes a mocked "estimated local pint" panel that layers a rough regional multiplier and optional venue premium on top of the national ONS average. Browser geolocation is optional and only used to guess a region client-side.
+
 ## Tech Stack
 
 - **Frontend**: Static HTML/CSS/JS (GitHub Pages)
@@ -34,6 +36,7 @@ ONS data is in `ons/series-130326.csv`:
 - [x] ONS data integration
 - [x] Price milestones timeline
 - [x] Work-per-pint metric
+- [x] Mocked browser-location local multiplier
 
 ### v2 (Future)
 - [ ] Cloudflare Worker API

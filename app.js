@@ -1,23 +1,299 @@
 // Parse ONS CSV and calculate regression
+const LOCATION_STORAGE_KEY = 'doomsday-location-model-v1';
+const EIGHT_POUND_PINT = 8;
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTH_MAP = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
+const REGION_MODELS = [
+  { key: 'gb', label: 'UK average', multiplier: 1.0 },
+  { key: 'london', label: 'London', multiplier: 1.35, bounds: { minLat: 51.28, maxLat: 51.72, minLng: -0.55, maxLng: 0.35 } },
+  { key: 'northern-ireland', label: 'Northern Ireland', multiplier: 0.96, bounds: { minLat: 54.0, maxLat: 55.45, minLng: -8.35, maxLng: -5.25 } },
+  { key: 'scotland', label: 'Scotland', multiplier: 1.05, bounds: { minLat: 54.55, maxLat: 60.95, minLng: -8.15, maxLng: -0.45 } },
+  { key: 'wales', label: 'Wales', multiplier: 0.93, bounds: { minLat: 51.3, maxLat: 53.55, minLng: -5.75, maxLng: -2.45 } },
+  { key: 'north-east', label: 'North East', multiplier: 0.95, bounds: { minLat: 54.45, maxLat: 55.85, minLng: -2.7, maxLng: -0.75 } },
+  { key: 'north-west', label: 'North West', multiplier: 1.01, bounds: { minLat: 53.15, maxLat: 55.45, minLng: -3.75, maxLng: -1.95 } },
+  { key: 'yorkshire-humber', label: 'Yorkshire and the Humber', multiplier: 0.99, bounds: { minLat: 53.25, maxLat: 54.85, minLng: -2.35, maxLng: 0.25 } },
+  { key: 'east-midlands', label: 'East Midlands', multiplier: 0.97, bounds: { minLat: 52.45, maxLat: 53.8, minLng: -1.95, maxLng: 0.45 } },
+  { key: 'west-midlands', label: 'West Midlands', multiplier: 0.98, bounds: { minLat: 51.8, maxLat: 53.35, minLng: -3.25, maxLng: -1.1 } },
+  { key: 'east-of-england', label: 'East of England', multiplier: 1.08, bounds: { minLat: 51.55, maxLat: 53.55, minLng: -0.85, maxLng: 1.85 } },
+  { key: 'south-west', label: 'South West', multiplier: 1.04, bounds: { minLat: 49.85, maxLat: 51.85, minLng: -6.6, maxLng: -1.45 } },
+  { key: 'south-east', label: 'South East', multiplier: 1.12, bounds: { minLat: 50.65, maxLat: 51.95, minLng: -1.9, maxLng: 1.55 } }
+];
+const VENUE_MODELS = [
+  { key: 'standard', label: 'Neighbourhood pub', multiplier: 1.0 },
+  { key: 'city-centre', label: 'City centre', multiplier: 1.12 },
+  { key: 'tourist-hotspot', label: 'Tourist hotspot', multiplier: 1.25 },
+  { key: 'travel-hub', label: 'Station / airport / stadium', multiplier: 1.35 }
+];
+
 let onsData = [];
 let regression = { slope: 0, intercept: 0 };
 let currentPrice = 4.83;
 let currentDate = '2025 JAN';
-let targetPrice = 5.00;
+let targetPrice = 5.0;
 let chart = null;
+let permissionWatcher = null;
+const locationState = {
+  regionKey: 'gb',
+  venueKey: 'standard',
+  source: 'default',
+  permissionState: 'unknown'
+};
+
+function getRegionModel(regionKey) {
+  return REGION_MODELS.find((region) => region.key === regionKey) || REGION_MODELS[0];
+}
+
+function getVenueModel(venueKey) {
+  return VENUE_MODELS.find((venue) => venue.key === venueKey) || VENUE_MODELS[0];
+}
+
+function hasRegionModel(regionKey) {
+  return REGION_MODELS.some((region) => region.key === regionKey);
+}
+
+function hasVenueModel(venueKey) {
+  return VENUE_MODELS.some((venue) => venue.key === venueKey);
+}
+
+function formatCurrency(value) {
+  return `£${value.toFixed(2)}`;
+}
+
+function formatMultiplier(value) {
+  return `${value.toFixed(2)}x`;
+}
+
+function loadLocationPreferences() {
+  try {
+    const raw = localStorage.getItem(LOCATION_STORAGE_KEY);
+    if (!raw) {
+      return;
+    }
+
+    const stored = JSON.parse(raw);
+    if (stored.regionKey && hasRegionModel(stored.regionKey)) {
+      locationState.regionKey = stored.regionKey;
+    }
+    if (stored.venueKey && hasVenueModel(stored.venueKey)) {
+      locationState.venueKey = stored.venueKey;
+    }
+    if (stored.source) {
+      locationState.source = stored.source;
+    }
+  } catch (error) {
+    console.warn('Could not load local estimate preferences', error);
+  }
+}
+
+function saveLocationPreferences() {
+  try {
+    localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify({
+      regionKey: locationState.regionKey,
+      venueKey: locationState.venueKey,
+      source: locationState.source
+    }));
+  } catch (error) {
+    console.warn('Could not save local estimate preferences', error);
+  }
+}
+
+function populateLocationControls() {
+  const regionSelect = document.getElementById('region-select');
+  const venueSelect = document.getElementById('venue-select');
+
+  regionSelect.innerHTML = REGION_MODELS.map((region) => (
+    `<option value="${region.key}">${region.label} · ${formatMultiplier(region.multiplier)}</option>`
+  )).join('');
+
+  venueSelect.innerHTML = VENUE_MODELS.map((venue) => (
+    `<option value="${venue.key}">${venue.label} · ${formatMultiplier(venue.multiplier)}</option>`
+  )).join('');
+
+  regionSelect.value = locationState.regionKey;
+  venueSelect.value = locationState.venueKey;
+}
+
+function setLocationStatus(message) {
+  document.getElementById('location-status').textContent = message;
+}
+
+function updateLocalEstimate() {
+  const region = getRegionModel(locationState.regionKey);
+  const venue = getVenueModel(locationState.venueKey);
+  const combinedMultiplier = region.multiplier * venue.multiplier;
+  const estimatedLocalPint = currentPrice * combinedMultiplier;
+  const gapToEight = Math.max(0, EIGHT_POUND_PINT - estimatedLocalPint);
+  const progressToEight = (estimatedLocalPint / EIGHT_POUND_PINT) * 100;
+
+  document.getElementById('region-select').value = region.key;
+  document.getElementById('venue-select').value = venue.key;
+  document.getElementById('local-price').textContent = formatCurrency(estimatedLocalPint);
+  document.getElementById('local-formula').textContent = `${formatCurrency(currentPrice)} uk avg × ${formatMultiplier(region.multiplier)} × ${formatMultiplier(venue.multiplier)}`;
+  document.getElementById('local-multiplier').textContent = formatMultiplier(combinedMultiplier);
+  document.getElementById('local-region-note').textContent = `${region.label} · ${venue.label.toLowerCase()}`;
+  document.getElementById('local-gap').textContent = estimatedLocalPint >= EIGHT_POUND_PINT ? 'past £8' : formatCurrency(gapToEight);
+  document.getElementById('local-progress').textContent = estimatedLocalPint >= EIGHT_POUND_PINT
+    ? `${progressToEight.toFixed(1)}% of the £8 line in this mock model`
+    : `${progressToEight.toFixed(1)}% of the way there locally`;
+}
+
+function updateLocateButton(permissionState = locationState.permissionState) {
+  const locateButton = document.getElementById('locate-btn');
+
+  if (!navigator.geolocation) {
+    locateButton.disabled = true;
+    locateButton.textContent = 'location unavailable';
+    return;
+  }
+
+  locateButton.disabled = false;
+  if (permissionState === 'granted') {
+    locateButton.textContent = 'refresh location';
+    return;
+  }
+  if (permissionState === 'denied') {
+    locateButton.textContent = 'location blocked';
+    return;
+  }
+
+  locateButton.textContent = 'use my location';
+}
+
+function resolveRegionByCoordinates(latitude, longitude) {
+  const matchedRegion = REGION_MODELS.find((region) => {
+    if (!region.bounds) {
+      return false;
+    }
+
+    return latitude >= region.bounds.minLat
+      && latitude <= region.bounds.maxLat
+      && longitude >= region.bounds.minLng
+      && longitude <= region.bounds.maxLng;
+  });
+
+  return matchedRegion || getRegionModel('gb');
+}
+
+async function syncGeolocationPermission() {
+  if (!navigator.geolocation || !navigator.permissions?.query) {
+    updateLocateButton();
+    return;
+  }
+
+  try {
+    permissionWatcher = await navigator.permissions.query({ name: 'geolocation' });
+    locationState.permissionState = permissionWatcher.state;
+    updateLocateButton(permissionWatcher.state);
+
+    permissionWatcher.onchange = () => {
+      locationState.permissionState = permissionWatcher.state;
+      updateLocateButton(permissionWatcher.state);
+
+      if (permissionWatcher.state === 'denied' && locationState.source === 'browser') {
+        locationState.regionKey = 'gb';
+        locationState.source = 'default';
+        saveLocationPreferences();
+        updateLocalEstimate();
+        setLocationStatus('location permission is blocked, so the local estimate has fallen back to the uk baseline. you can still pick a region manually.');
+      }
+    };
+  } catch (error) {
+    console.warn('Could not read geolocation permission state', error);
+    updateLocateButton();
+  }
+}
+
+function handleLocationSuccess(position) {
+  const { latitude, longitude } = position.coords;
+  const region = resolveRegionByCoordinates(latitude, longitude);
+
+  locationState.regionKey = region.key;
+  locationState.source = 'browser';
+  saveLocationPreferences();
+  updateLocalEstimate();
+
+  if (region.key === 'gb') {
+    setLocationStatus('browser location worked, but the coordinate fell outside the mocked uk region boxes, so this estimate stayed on the uk baseline.');
+  } else {
+    setLocationStatus(`browser location mapped you to ${region.label.toLowerCase()} using a rough regional box. only the derived region is stored in this browser.`);
+  }
+}
+
+function handleLocationError(error) {
+  const permissionDenied = error.code === 1 || error.code === error.PERMISSION_DENIED;
+  locationState.permissionState = permissionDenied ? 'denied' : locationState.permissionState;
+  updateLocateButton(locationState.permissionState);
+
+  if (permissionDenied) {
+    setLocationStatus('location permission was denied. pick a region manually or re-enable location in the browser and try again.');
+    return;
+  }
+
+  setLocationStatus('could not get your browser location just now. the local estimate is still usable with the manual region picker.');
+}
+
+function requestBrowserLocation() {
+  if (!navigator.geolocation) {
+    setLocationStatus('this browser does not expose geolocation, so use the manual region picker instead.');
+    return;
+  }
+
+  setLocationStatus('asking the browser for your approximate location...');
+  navigator.geolocation.getCurrentPosition(handleLocationSuccess, handleLocationError, {
+    enableHighAccuracy: false,
+    timeout: 10000,
+    maximumAge: 300000
+  });
+}
+
+function initLocationControls() {
+  loadLocationPreferences();
+  populateLocationControls();
+  updateLocateButton();
+  updateLocalEstimate();
+
+  document.getElementById('region-select').addEventListener('change', (event) => {
+    locationState.regionKey = event.target.value;
+    locationState.source = 'manual';
+    saveLocationPreferences();
+    updateLocalEstimate();
+    setLocationStatus(`manual region set to ${getRegionModel(locationState.regionKey).label.toLowerCase()}. use browser location any time to replace it with an automatic estimate.`);
+  });
+
+  document.getElementById('venue-select').addEventListener('change', (event) => {
+    locationState.venueKey = event.target.value;
+    saveLocationPreferences();
+    updateLocalEstimate();
+
+    const venue = getVenueModel(locationState.venueKey);
+    if (locationState.source === 'browser') {
+      setLocationStatus(`browser region estimate kept, venue context switched to ${venue.label.toLowerCase()}.`);
+    } else if (locationState.source === 'manual') {
+      setLocationStatus(`manual region estimate kept, venue context switched to ${venue.label.toLowerCase()}.`);
+    }
+  });
+
+  document.getElementById('locate-btn').addEventListener('click', requestBrowserLocation);
+
+  if (locationState.source === 'browser') {
+    const region = getRegionModel(locationState.regionKey);
+    setLocationStatus(`using your last browser-derived region estimate for ${region.label.toLowerCase()}. refresh location to update it.`);
+  }
+
+  syncGeolocationPermission();
+}
 
 async function loadData() {
+  onsData = [];
   const response = await fetch('ons/series-130326.csv');
   const text = await response.text();
   const lines = text.split('\n').slice(8); // Skip header rows
-  
-  const monthMap = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
-  
+
   for (const line of lines) {
     const match = line.match(/"(\d{4})(?: ([A-Z]{3}))?","(\d+)"/);
     if (match) {
       const year = parseInt(match[1]);
-      const month = match[2] ? monthMap[match[2]] : 0;
+      const month = match[2] ? MONTH_MAP[match[2]] : 0;
       const price = parseInt(match[3]) / 100;
       const yearDecimal = year + month / 12;
       onsData.push({ year, month, yearDecimal, price });
@@ -27,7 +303,7 @@ async function loadData() {
   // Get latest price
   const latest = onsData[onsData.length - 1];
   currentPrice = latest.price;
-  currentDate = `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][latest.month]} ${latest.year}`;
+  currentDate = `${MONTH_NAMES[latest.month]} ${latest.year}`;
   
   // Calculate regression from 2015 onwards
   const recentData = onsData.filter(d => d.year >= 2015);
@@ -91,15 +367,15 @@ function updateUI() {
   document.getElementById('target-price').textContent = `£${target.toFixed(2)}`;
   document.getElementById('target-display').textContent = target.toFixed(2);
   document.getElementById('remaining').textContent = `£${remaining.toFixed(2)} to go`;
-  
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const dateStr = `${months[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
-  const dayStr = `${targetDate.getDate()}${getOrdinal(targetDate.getDate())} ${months[targetDate.getMonth()]}`;
+
+  const dateStr = `${MONTH_NAMES[targetDate.getMonth()]} ${targetDate.getFullYear()}`;
+  const dayStr = `${targetDate.getDate()}${getOrdinal(targetDate.getDate())} ${MONTH_NAMES[targetDate.getMonth()]}`;
   
   document.getElementById('predicted-date').textContent = dateStr;
   document.getElementById('predicted-day').textContent = dayStr;
   document.getElementById('yearly-rise').textContent = `+${yearlyPercent.toFixed(1)}%`;
   document.getElementById('monthly-rise').textContent = `≈ +${Math.round(monthlyRise * 100)}p/month`;
+  updateLocalEstimate();
   
   if (chart) {
     updateChart();
@@ -119,7 +395,10 @@ function startCountdown() {
     const diff = targetDate - now;
     
     if (diff <= 0) {
-      document.getElementById('status-text').textContent = 'target reached!';
+      const statusText = document.getElementById('status-text');
+      if (statusText) {
+        statusText.textContent = 'target reached!';
+      }
       document.getElementById('days').textContent = '000';
       document.getElementById('hours').textContent = '00';
       document.getElementById('minutes').textContent = '00';
@@ -363,5 +642,6 @@ function updatePresetButtons() {
 }
 
 // Initialize
+initLocationControls();
 loadData();
 updatePresetButtons();

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -64,6 +64,47 @@
       </div>
     </div>
 
+    <section class="local-estimate panel">
+      <div class="panel-header">
+        <div>
+          <h3>estimated local pint</h3>
+          <p class="panel-copy">mocked regional and venue multipliers layered over the uk average. browser location only picks an estimated region.</p>
+        </div>
+        <button class="secondary-btn" id="locate-btn" type="button">use my location</button>
+      </div>
+
+      <div class="location-controls">
+        <label class="field">
+          <span class="field-label">region</span>
+          <select id="region-select"></select>
+        </label>
+        <label class="field">
+          <span class="field-label">venue context</span>
+          <select id="venue-select"></select>
+        </label>
+      </div>
+
+      <p class="location-status" id="location-status">using the uk baseline until you pick a region or share your browser location.</p>
+
+      <div class="local-stats">
+        <div class="mini-stat">
+          <div class="mini-stat-label">Estimated Here</div>
+          <div class="mini-stat-value" id="local-price">£4.83</div>
+          <div class="mini-stat-note" id="local-formula">£4.83 uk avg × 1.00 × 1.00</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-label">Local Multiplier</div>
+          <div class="mini-stat-value" id="local-multiplier">1.00x</div>
+          <div class="mini-stat-note" id="local-region-note">uk average · neighbourhood pub</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-label">Distance To £8</div>
+          <div class="mini-stat-value" id="local-gap">£3.17</div>
+          <div class="mini-stat-note" id="local-progress">60.4% of the way there locally</div>
+        </div>
+      </div>
+    </section>
+
     <div class="threshold-control panel">
       <h3>set your price target</h3>
       <div class="slider-container">
@@ -92,10 +133,10 @@
     </div>
 
     <footer class="footer">
-      <p>data: ons average price of a pint of draught lager in the uk. prediction uses linear regression on 2015–2025 trend data. prices shown are uk-wide averages and will vary significantly by region and establishment.</p>
+      <p>data: ons average price of a pint of draught lager in the uk. prediction uses linear regression on 2015–2025 trend data. local pricing is a mocked estimate based on rough regional multipliers, optional venue premiums, and browser geolocation when you allow it.</p>
     </footer>
   </div>
 
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
