@@ -557,15 +557,26 @@ h1 {
 
 .map-backdrop {
   position: absolute;
-  inset: 8% 14%;
-  background:
-    radial-gradient(circle at 48% 16%, rgba(179, 244, 243, 0.08), rgba(179, 244, 243, 0) 18%),
-    radial-gradient(circle at 47% 28%, rgba(179, 244, 243, 0.08), rgba(179, 244, 243, 0) 22%),
-    radial-gradient(circle at 47% 44%, rgba(179, 244, 243, 0.08), rgba(179, 244, 243, 0) 18%),
-    radial-gradient(circle at 50% 64%, rgba(179, 244, 243, 0.08), rgba(179, 244, 243, 0) 18%),
-    radial-gradient(circle at 62% 76%, rgba(179, 244, 243, 0.08), rgba(179, 244, 243, 0) 16%),
-    radial-gradient(circle at 25% 40%, rgba(179, 244, 243, 0.06), rgba(179, 244, 243, 0) 10%);
-  filter: blur(8px);
+  inset: 6% 9%;
+  width: 82%;
+  height: 88%;
+  overflow: visible;
+}
+
+.map-outline path {
+  fill: rgba(179, 244, 243, 0.05);
+  stroke: rgba(179, 244, 243, 0.42);
+  stroke-width: 10;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.map-grid path {
+  fill: none;
+  stroke: rgba(225, 146, 239, 0.18);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 12 18;
 }
 
 .map-chip {
