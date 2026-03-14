@@ -27,7 +27,7 @@ body {
     linear-gradient(160deg, var(--bg-0), var(--bg-1) 40%, var(--bg-0));
   color: var(--ink);
   min-height: 100vh;
-  padding: 24px;
+  padding: clamp(14px, 2.4vw, 24px);
 }
 
 body::before {
@@ -80,7 +80,7 @@ body::before {
 
 h1 {
   font-family: "Space Grotesk", "JetBrains Mono", sans-serif;
-  font-size: 36px;
+  font-size: clamp(2rem, 5vw, 2.25rem);
   font-weight: 600;
   color: var(--accent);
   text-transform: lowercase;
@@ -145,7 +145,7 @@ h1 {
   gap: 10px;
   margin-bottom: 32px;
   background: var(--bg-2);
-  padding: 30px;
+  padding: clamp(16px, 3vw, 30px);
   border-radius: 12px;
   border: 1px solid var(--line);
   box-shadow: 0 10px 30px var(--shadow);
@@ -165,14 +165,14 @@ h1 {
 
 .clock-value {
   font-family: 'Courier New', monospace;
-  font-size: 3.5rem;
+  font-size: clamp(2.25rem, 6vw, 3.5rem);
   font-weight: 700;
   color: var(--accent);
   text-shadow: 
     0 0 10px rgba(179, 244, 243, 0.6),
     0 0 20px rgba(179, 244, 243, 0.3);
   line-height: 1;
-  min-width: 100px;
+  min-width: 82px;
 }
 
 .clock-label {
@@ -185,7 +185,7 @@ h1 {
 
 .clock-separator {
   font-family: 'Courier New', monospace;
-  font-size: 3rem;
+  font-size: clamp(2rem, 5vw, 3rem);
   color: var(--accent);
   opacity: 0.6;
   margin: 0 5px;
@@ -355,7 +355,7 @@ h1 {
 
 .local-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px;
 }
 
@@ -480,6 +480,7 @@ h1 {
   justify-content: center;
   gap: 30px;
   margin-top: 15px;
+  flex-wrap: wrap;
 }
 
 .legend-item {
@@ -525,11 +526,13 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  flex-wrap: wrap;
   gap: 20px;
 }
 
 .atlas-select {
   min-width: 260px;
+  flex: 0 1 320px;
 }
 
 .atlas-map-panel,
@@ -665,67 +668,132 @@ h1 {
   color: var(--accent);
 }
 
+@media (max-width: 900px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .local-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .map-surface {
+    min-height: 760px;
+  }
+}
+
+@media (max-width: 720px) {
+  .hero-left {
+    text-align: center;
+  }
+
+  .description-left {
+    margin: 0 auto;
+  }
+
+  .clock {
+    gap: 12px;
+    justify-content: stretch;
+  }
+
+  .clock-segment {
+    flex: 1 1 calc(50% - 12px);
+    min-width: 0;
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(20, 17, 27, 0.45);
+    border: 1px solid rgba(179, 244, 243, 0.08);
+  }
+
+  .clock-separator {
+    display: none;
+  }
+
+  .clock-value {
+    min-width: 0;
+  }
+
+  .panel-header {
+    grid-template-columns: 1fr;
+    display: grid;
+    gap: 12px;
+  }
+
+  .location-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .secondary-btn,
+  .atlas-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .slider-labels {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .presets {
+    justify-content: stretch;
+  }
+
+  .preset-btn {
+    flex: 1 1 calc(50% - 8px);
+  }
+
+  .field select {
+    font-size: 16px;
+  }
+}
+
 @media (max-width: 640px) {
-  body {
-    padding: 16px;
-  }
-  
-  h1 {
-    font-size: 28px;
-  }
-  
   .subtitle {
     font-size: 14px;
   }
   
-  .clock-value {
-    font-size: 2.5rem;
-    min-width: 70px;
-  }
-  
-  .clock-separator {
-    font-size: 2rem;
-  }
-  
   .stats {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 
-  .panel-header,
-  .location-controls,
-  .local-stats {
+  .local-stats,
+  .atlas-row {
     grid-template-columns: 1fr;
     display: grid;
   }
 
-  .panel-header {
-    gap: 12px;
-  }
-
-  .secondary-btn {
+  .slider-value {
     width: 100%;
+    text-align: center;
   }
 
-  .atlas-summary-row,
-  .atlas-row {
-    display: grid;
+  .atlas-table {
+    grid-template-columns: 1fr;
   }
+}
 
-  .atlas-select {
-    min-width: 0;
-  }
-
-  .atlas-map-panel,
-  .atlas-table-panel {
-    min-height: auto;
-  }
-
+@media (max-width: 560px) {
   .map-surface {
-    min-height: 920px;
+    min-height: 520px;
   }
 
+  .map-link,
   .map-chip {
-    min-width: 108px;
-    max-width: 124px;
+    display: none;
+  }
+
+  .map-pin {
+    width: 7px;
+    height: 7px;
+    margin-left: -3.5px;
+    margin-top: -3.5px;
+  }
+
+  .atlas-row {
+    gap: 10px;
+  }
+
+  .atlas-row-value {
+    font-size: 1.1rem;
   }
 }
