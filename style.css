@@ -532,15 +532,13 @@ h1 {
   min-width: 260px;
 }
 
-.atlas-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
-  gap: 18px;
-}
-
 .atlas-map-panel,
 .atlas-table-panel {
-  min-height: 620px;
+  min-height: 0;
+}
+
+.atlas-table-panel-wide {
+  margin-top: 18px;
 }
 
 .map-surface {
@@ -634,6 +632,7 @@ h1 {
 
 .atlas-table {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 10px;
 }
 
@@ -708,7 +707,6 @@ h1 {
   }
 
   .atlas-summary-row,
-  .atlas-grid,
   .atlas-row {
     display: grid;
   }
