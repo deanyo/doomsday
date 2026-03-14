@@ -3,6 +3,8 @@ const LOCATION_STORAGE_KEY = 'doomsday-location-model-v1';
 const { eightPoundPint: EIGHT_POUND_PINT, regionModels: REGION_MODELS, venueModels: VENUE_MODELS } = window.DOOMSDAY_MODEL;
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTH_MAP = { JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5, JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11 };
+const TARGET_MILESTONE_STEP = 0.5;
+const TARGET_PRICE_MAX = 10;
 
 let onsData = [];
 let regression = { slope: 0, intercept: 0 };
@@ -11,6 +13,7 @@ let currentDate = '2025 JAN';
 let targetPrice = 5.0;
 let chart = null;
 let permissionWatcher = null;
+let latestLocalEstimate = null;
 const locationState = {
   regionKey: 'gb',
   venueKey: 'standard',
@@ -40,6 +43,41 @@ function formatCurrency(value) {
 
 function formatMultiplier(value) {
   return `${value.toFixed(2)}x`;
+}
+
+function getNextMilestoneTarget(price) {
+  const nextStep = (Math.floor(price / TARGET_MILESTONE_STEP) + 1) * TARGET_MILESTONE_STEP;
+  return Math.min(TARGET_PRICE_MAX, Number(nextStep.toFixed(2)));
+}
+
+function setTargetPrice(nextTargetPrice) {
+  targetPrice = nextTargetPrice;
+  document.getElementById('threshold').value = targetPrice.toFixed(2);
+  document.getElementById('slider-value').textContent = targetPrice.toFixed(2);
+  updateUI();
+  updatePresetButtons();
+}
+
+function autoAdjustTargetToLocalEstimate(localEstimate = latestLocalEstimate) {
+  if (!localEstimate) {
+    return null;
+  }
+
+  const nextTarget = getNextMilestoneTarget(localEstimate.estimatedLocalPint);
+  if (nextTarget <= targetPrice + 0.001) {
+    return null;
+  }
+
+  setTargetPrice(nextTarget);
+  return nextTarget;
+}
+
+function appendTargetBumpMessage(message, adjustedTarget) {
+  if (!adjustedTarget) {
+    return message;
+  }
+
+  return `${message} slider bumped to £${adjustedTarget.toFixed(2)}, the next milestone above your local estimate.`;
 }
 
 function getDistanceKm(latA, lngA, latB, lngB) {
@@ -145,6 +183,17 @@ function updateLocalEstimate() {
   document.getElementById('local-progress').textContent = estimatedLocalPint >= EIGHT_POUND_PINT
     ? `${progressToEight.toFixed(1)}% of the £8 line in this mock model`
     : `${progressToEight.toFixed(1)}% of the way there locally`;
+
+  latestLocalEstimate = {
+    region,
+    venue,
+    combinedMultiplier,
+    estimatedLocalPint,
+    gapToEight,
+    progressToEight
+  };
+
+  return latestLocalEstimate;
 }
 
 function updateLocateButton(permissionState = locationState.permissionState) {
@@ -211,16 +260,17 @@ function handleLocationSuccess(position) {
   locationState.regionKey = region.key;
   locationState.source = 'browser';
   saveLocationPreferences();
-  updateLocalEstimate();
+  const localEstimate = updateLocalEstimate();
+  const adjustedTarget = autoAdjustTargetToLocalEstimate(localEstimate);
 
   if (region.key === 'gb') {
-    setLocationStatus('browser location worked, but the coordinate fell outside the mocked uk region boxes, so this estimate stayed on the uk baseline.');
+    setLocationStatus(appendTargetBumpMessage('browser location worked, but the coordinate fell outside the mocked uk region boxes, so this estimate stayed on the uk baseline.', adjustedTarget));
   } else if (region.key === 'london-core') {
-    setLocationStatus('browser location landed inside the tighter london core zone. outer london and commuter towns should usually fall back into the surrounding regional boxes instead.');
+    setLocationStatus(appendTargetBumpMessage('browser location landed inside the tighter london core zone. outer london and commuter towns should usually fall back into the surrounding regional boxes instead.', adjustedTarget));
   } else if (region.key === 'london-orbit') {
-    setLocationStatus('browser location mapped you into the london orbit band. that is meant for outer london and nearby commuter-belt pricing without calling everything generic london.');
+    setLocationStatus(appendTargetBumpMessage('browser location mapped you into the london orbit band. that is meant for outer london and nearby commuter-belt pricing without calling everything generic london.', adjustedTarget));
   } else {
-    setLocationStatus(`browser location mapped you to ${region.label.toLowerCase()} using a rough regional box. only the derived region is stored in this browser.`);
+    setLocationStatus(appendTargetBumpMessage(`browser location mapped you to ${region.label.toLowerCase()} using a rough regional box. only the derived region is stored in this browser.`, adjustedTarget));
   }
 }
 
@@ -261,20 +311,24 @@ function initLocationControls() {
     locationState.regionKey = event.target.value;
     locationState.source = 'manual';
     saveLocationPreferences();
-    updateLocalEstimate();
-    setLocationStatus(`manual region set to ${getRegionModel(locationState.regionKey).label.toLowerCase()}. use browser location any time to replace it with an automatic estimate.`);
+    const localEstimate = updateLocalEstimate();
+    const adjustedTarget = autoAdjustTargetToLocalEstimate(localEstimate);
+    setLocationStatus(appendTargetBumpMessage(`manual region set to ${getRegionModel(locationState.regionKey).label.toLowerCase()}. use browser location any time to replace it with an automatic estimate.`, adjustedTarget));
   });
 
   document.getElementById('venue-select').addEventListener('change', (event) => {
     locationState.venueKey = event.target.value;
     saveLocationPreferences();
-    updateLocalEstimate();
+    const localEstimate = updateLocalEstimate();
+    const adjustedTarget = autoAdjustTargetToLocalEstimate(localEstimate);
 
     const venue = getVenueModel(locationState.venueKey);
     if (locationState.source === 'browser') {
-      setLocationStatus(`browser region estimate kept, venue context switched to ${venue.label.toLowerCase()}.`);
+      setLocationStatus(appendTargetBumpMessage(`browser region estimate kept, venue context switched to ${venue.label.toLowerCase()}.`, adjustedTarget));
     } else if (locationState.source === 'manual') {
-      setLocationStatus(`manual region estimate kept, venue context switched to ${venue.label.toLowerCase()}.`);
+      setLocationStatus(appendTargetBumpMessage(`manual region estimate kept, venue context switched to ${venue.label.toLowerCase()}.`, adjustedTarget));
+    } else if (locationState.source === 'default') {
+      setLocationStatus(appendTargetBumpMessage(`venue context switched to ${venue.label.toLowerCase()}.`, adjustedTarget));
     }
   });
 
@@ -331,6 +385,7 @@ async function loadData() {
   });
   
   updateUI();
+  autoAdjustTargetToLocalEstimate();
   initChart();
   startCountdown();
 }
@@ -380,7 +435,7 @@ function updateUI() {
   document.getElementById('predicted-day').textContent = dayStr;
   document.getElementById('yearly-rise').textContent = `+${yearlyPercent.toFixed(1)}%`;
   document.getElementById('monthly-rise').textContent = `≈ +${Math.round(monthlyRise * 100)}p/month`;
-  updateLocalEstimate();
+  latestLocalEstimate = updateLocalEstimate();
   
   if (chart) {
     updateChart();
@@ -643,10 +698,7 @@ document.getElementById('threshold').addEventListener('input', (e) => {
 
 document.querySelectorAll('.preset-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    targetPrice = parseFloat(btn.dataset.value);
-    document.getElementById('threshold').value = targetPrice.toFixed(2);
-    updateUI();
-    updatePresetButtons();
+    setTargetPrice(parseFloat(btn.dataset.value));
   });
 });
 
